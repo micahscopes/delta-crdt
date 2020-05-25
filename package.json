@@ -1,10 +1,11 @@
 {
-  "name": "reason_delta_crdt",
+  "name": "reason-delta-crdts",
   "version": "0.1.0",
   "scripts": {
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
-    "clean": "bsb -clean-world"
+    "clean": "bsb -clean-world",
+    "test:bs": "bsb -make-world && node lib/js/tests/reason/*"
   },
   "keywords": [
     "BuckleScript"
@@ -12,6 +13,12 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "bs-platform": "^7.3.2"
+    "bs-platform": "^7.3.2",
+    "bs-tape": "^0.3.0",
+    "snowpack": "^1.7.1"
+  },
+  "dependencies": {
+    "esm": "^3.2.25"
   }
 }
+

@@ -23,6 +23,8 @@ lib64
 venv*/
 pyvenv*/
 pip-wheel-metadata/
+node_modules/
+package-lock.json
 
 # Installer logs
 pip-log.txt
@@ -69,3 +71,7 @@ docs/_build
 
 # Mypy Cache
 .mypy_cache/
+
+# Reason/Ocaml
+.merlin
+

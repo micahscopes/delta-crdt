@@ -2,17 +2,28 @@
   "name": "reason-delta-crdts",
   "namespace": "delta-crdts",
   "version": "0.1.0",
-  "sources": {
-    "dir" : "src/reason-delta-crdts",
-    "subdirs" : true
-  },
-  "package-specs": {
-    "module": "es6",
-    "in-source": true
-  },
+  "sources": [
+    {
+      "dir" : "src/reason-delta-crdts",
+      "subdirs" : true
+    },
+    {
+      "dir" : "tests/reason",
+      "subdirs" : true
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "es6",
+      "in-source": true
+    },
+    {
+      "module": "commonjs"
+    }
+  ],
   "suffix": ".bs.js",
   "bs-dependencies": [
-
+    "bs-tape"
   ],
   "warnings": {
     "error" : "+101"
