@@ -5,7 +5,7 @@
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
     "clean": "bsb -clean-world",
-    "test:bs": "bsb -make-world && node lib/js/tests/reason/*"
+    "test:bs": "bsb -make-world && tape lib/**/Test*.bs.js"
   },
   "keywords": [
     "BuckleScript"
@@ -18,7 +18,7 @@
     "snowpack": "^1.7.1"
   },
   "dependencies": {
-    "esm": "^3.2.25"
+    "esm": "^3.2.25",
+    "tablecloth-bucklescript": "0.0.7"
   }
 }
-
