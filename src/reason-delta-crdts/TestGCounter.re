@@ -3,7 +3,7 @@ open Tape
 test("test that we can increment the counter", t => {
   module CounterType = GCounter.Make(String);
   open CounterType;
-  let replica = increment(CounterType.replica("micah"));
+  let (replica, dReplica) = increment(CounterType.replica("micah"));
   let replicaValue = value(replica);
   t.plan(1);
   t.ok(replicaValue === 1);

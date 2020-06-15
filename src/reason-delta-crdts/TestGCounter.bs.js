@@ -9,8 +9,8 @@ Tape.test("test that we can increment the counter", (function (t) {
         var CounterType = GCounter$DeltaCrdts.Make({
               compare: $$String.compare
             });
-        var replica = Curry._1(CounterType.increment, Curry._1(CounterType.replica, "micah"));
-        var replicaValue = Curry._1(CounterType.value, replica);
+        var match = Curry._1(CounterType.increment, Curry._1(CounterType.replica, "micah"));
+        var replicaValue = Curry._1(CounterType.value, match[0]);
         Curry._1(t.plan, 1);
         return Curry._2(t.ok, undefined, replicaValue === 1);
       }));
