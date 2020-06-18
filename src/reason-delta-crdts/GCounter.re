@@ -9,13 +9,14 @@ module Make = (Id: Map.OrderedType) => {
     | Replica(Id.t, state): joinable(replica)  
     | Delta(state): joinable(delta)
   
-  let stateOfJoinable: type a. joinable(a) => state =
-    fun 
+  let stateOfJoinable = (type a, x:joinable(a)) =>
+    switch(x) { 
       | Replica(_, state) => state
       | Delta(state) => state; 
+    }
 
   let replica = id => Replica(id, empty |> add(id, 0));
-  
+
   let value = (j: joinable('a)) =>
     fold((_,v,accum) => v+accum, stateOfJoinable(j), 0); 
     

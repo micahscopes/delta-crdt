@@ -7,11 +7,11 @@ import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 
 function Make(Id) {
   var State = $$Map.Make(Id);
-  var stateOfJoinable = function (state) {
-    if (state.tag) {
-      return state[0];
+  var stateOfJoinable = function (x) {
+    if (x.tag) {
+      return x[0];
     } else {
-      return state[1];
+      return x[1];
     }
   };
   var replica = function (id) {

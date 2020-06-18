@@ -3,10 +3,9 @@ open Tape
 test("test that we can increment the counter", t => {
   module CounterType = GCounter.Make(String);
   open CounterType;
-  let (replica, dReplica) = increment(CounterType.replica("micah"));
-  let replicaValue = value(replica);
-  t.plan(1);
-  t.ok(replicaValue === 1);
+  let (replica, _) = increment(CounterType.replica("marge"));
+  t.ok(value(replica) === 1);
+  t.endTest()
 });
 
 test("test that we can join deltas/replicas", t => {
