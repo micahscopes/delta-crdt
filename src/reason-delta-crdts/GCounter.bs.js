@@ -4,44 +4,30 @@ import * as $$Map from "bs-platform/lib/es6/map.js";
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
-import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
 
 function Make(Id) {
   var State = $$Map.Make(Id);
+  var stateOfJoinable = function (state) {
+    if (state.tag) {
+      return state[0];
+    } else {
+      return state[1];
+    }
+  };
   var replica = function (id) {
     return /* Replica */Block.__(0, [
               id,
               Curry._3(State.add, id, 0, State.empty)
             ]);
   };
-  var value = function (param) {
-    if (!param.tag) {
-      return Curry._3(State.fold, (function (k, v, accum) {
-                    return v + accum | 0;
-                  }), param[1], 0);
-    }
-    throw [
-          Caml_builtin_exceptions.match_failure,
-          /* tuple */[
-            "GCounter.re",
-            12,
-            14
-          ]
-        ];
+  var value = function (j) {
+    return Curry._3(State.fold, (function (param, v, accum) {
+                  return v + accum | 0;
+                }), stateOfJoinable(j), 0);
   };
-  var increment = function (param) {
-    if (param.tag) {
-      throw [
-            Caml_builtin_exceptions.match_failure,
-            /* tuple */[
-              "GCounter.re",
-              14,
-              18
-            ]
-          ];
-    }
-    var state = param[1];
-    var id = param[0];
+  var increment = function (replica) {
+    var state = replica[1];
+    var id = replica[0];
     var newValue = Curry._2(State.find, id, state) + 1 | 0;
     var delta = /* Delta */Block.__(1, [Curry._3(State.add, id, newValue, State.empty)]);
     var state$1 = Curry._3(State.add, id, newValue, state);
@@ -53,41 +39,25 @@ function Make(Id) {
             delta
           ];
   };
-  var stateOfJoinable = function (j) {
-    if (j.tag) {
-      return j[0];
+  var join = function (joinableA, joinableB) {
+    var mergedState = Curry._3(State.merge, (function (param) {
+            return Caml_obj.caml_max;
+          }), stateOfJoinable(joinableA), stateOfJoinable(joinableB));
+    if (joinableA.tag) {
+      return /* Delta */Block.__(1, [mergedState]);
     } else {
-      return j[1];
+      return /* Replica */Block.__(0, [
+                joinableA[0],
+                mergedState
+              ]);
     }
-  };
-  var join = function (param) {
-    if (param.tag) {
-      throw [
-            Caml_builtin_exceptions.match_failure,
-            /* tuple */[
-              "GCounter.re",
-              28,
-              13
-            ]
-          ];
-    }
-    var state = param[1];
-    var id = param[0];
-    return (function (joinable) {
-        return /* Replica */Block.__(0, [
-                  id,
-                  Curry._3(State.merge, (function (param) {
-                          return Caml_obj.caml_max;
-                        }), state, stateOfJoinable(joinable))
-                ]);
-      });
   };
   return {
           State: State,
+          stateOfJoinable: stateOfJoinable,
           replica: replica,
           value: value,
           increment: increment,
-          stateOfJoinable: stateOfJoinable,
           join: join
         };
 }
