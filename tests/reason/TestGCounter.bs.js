@@ -3,7 +3,7 @@
 import * as Tape from "bs-tape/src/Tape.bs.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as $$String from "bs-platform/lib/es6/string.js";
-import * as GCounter$DeltaCrdts from "./GCounter.bs.js";
+import * as GCounter$DeltaCrdts from "../../src/reason-delta-crdts/GCounter.bs.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
 
 Tape.test("test that we can increment the counter", (function (t) {
