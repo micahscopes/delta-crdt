@@ -4,61 +4,74 @@ import * as $$Map from "bs-platform/lib/es6/map.js";
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
+import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 
 function Make(Id) {
   var State = $$Map.Make(Id);
-  var stateOfJoinable = function (x) {
-    if (x.tag) {
-      return x[0];
+  var join = function (p, q) {
+    var state = Curry._3(State.merge, (function (param) {
+            return Caml_obj.caml_max;
+          }), p.state, q.state);
+    var id = p.id;
+    if (id !== undefined) {
+      var id$1 = Caml_option.valFromOption(id);
+      q.id !== undefined;
+      return {
+              id: Caml_option.some(id$1),
+              state: state
+            };
+    }
+    var id$2 = q.id;
+    if (id$2 !== undefined) {
+      return {
+              id: Caml_option.some(Caml_option.valFromOption(id$2)),
+              state: state
+            };
     } else {
-      return x[1];
+      return {
+              id: undefined,
+              state: state
+            };
     }
   };
   var replica = function (id) {
-    return /* Replica */Block.__(0, [
-              id,
-              Curry._3(State.add, id, 0, State.empty)
-            ]);
+    return {
+            id: Caml_option.some(id),
+            state: Curry._3(State.add, id, 0, State.empty)
+          };
   };
-  var value = function (j) {
+  var value = function (patch) {
     return Curry._3(State.fold, (function (param, v, accum) {
                   return v + accum | 0;
-                }), stateOfJoinable(j), 0);
+                }), patch.state, 0);
   };
   var increment = function (replica) {
-    var state = replica[1];
-    var id = replica[0];
-    var newValue = Curry._2(State.find, id, state) + 1 | 0;
-    var delta = /* Delta */Block.__(1, [Curry._3(State.add, id, newValue, State.empty)]);
-    var state$1 = Curry._3(State.add, id, newValue, state);
-    return /* tuple */[
-            /* Replica */Block.__(0, [
-                id,
-                state$1
-              ]),
-            delta
-          ];
-  };
-  var join = function (joinableA, joinableB) {
-    var mergedState = Curry._3(State.merge, (function (param) {
-            return Caml_obj.caml_max;
-          }), stateOfJoinable(joinableA), stateOfJoinable(joinableB));
-    if (joinableA.tag) {
-      return /* Delta */Block.__(1, [mergedState]);
-    } else {
-      return /* Replica */Block.__(0, [
-                joinableA[0],
-                mergedState
-              ]);
+    var id = replica.id;
+    if (id === undefined) {
+      return /* Invalid */Block.__(1, [replica]);
     }
+    var state = replica.state;
+    var id$1 = Caml_option.valFromOption(id);
+    var newValue = Curry._2(State.find, id$1, state) + 1 | 0;
+    var delta = Curry._3(State.add, id$1, newValue, State.empty);
+    var state$1 = Curry._3(State.add, id$1, newValue, state);
+    return /* Result */Block.__(0, [
+              /* replica */{
+                id: Caml_option.some(id$1),
+                state: state$1
+              },
+              /* delta */{
+                id: undefined,
+                state: delta
+              }
+            ]);
   };
   return {
           State: State,
-          stateOfJoinable: stateOfJoinable,
+          join: join,
           replica: replica,
           value: value,
-          increment: increment,
-          join: join
+          increment: increment
         };
 }
 
