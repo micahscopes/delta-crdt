@@ -1,14 +1,17 @@
 module Make = (Id: Map.OrderedType) => {
   module State = Map.Make(Id);
-  include CrdtCore.Make(State);
-  open State;
+  module Patch {
+    type patchType(_, 'a) = State.t('a)
+    let join = (p,q) => State.merge((_) => max, p, q)
+  }
+  
+  include Crdt.Make(Patch)
+  open State
 
-  type id = Id.t
-  type state = State.t(int);
+  let initialValue = 0
+  let replica = id => {id: Some(id), state: empty |> add(id, initialValue)};
 
   let value = patch => fold((_,v,accum) => v+accum, patch.state, 0); 
-  
-  let replica = replicaGenerator(0)
 
   let increment = replica => {
     switch replica {

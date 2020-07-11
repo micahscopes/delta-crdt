@@ -3,19 +3,32 @@
 import * as $$Map from "bs-platform/lib/es6/map.js";
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
+import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
-import * as CrdtCore$DeltaCrdts from "./CrdtCore.bs.js";
+import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
 function Make(Id) {
   var State = $$Map.Make(Id);
-  var include = CrdtCore$DeltaCrdts.Make(State);
-  var replicaGenerator = include.replicaGenerator;
+  var join = function (p, q) {
+    return Curry._3(State.merge, (function (param) {
+                  return Caml_obj.caml_max;
+                }), p, q);
+  };
+  var Patch = {
+    join: join
+  };
+  var include = Crdt$DeltaCrdts.Make(Patch);
+  var replica = function (id) {
+    return {
+            id: Caml_option.some(id),
+            state: Curry._3(State.add, id, 0, State.empty)
+          };
+  };
   var value = function (patch) {
     return Curry._3(State.fold, (function (param, v, accum) {
                   return v + accum | 0;
                 }), patch.state, 0);
   };
-  var replica = Curry._1(replicaGenerator, 0);
   var increment = function (replica) {
     var id = replica.id;
     if (id === undefined) {
@@ -39,10 +52,11 @@ function Make(Id) {
   };
   return {
           State: State,
-          replicaGenerator: replicaGenerator,
+          Patch: Patch,
           join: include.join,
-          value: value,
+          initialValue: 0,
           replica: replica,
+          value: value,
           increment: increment
         };
 }
