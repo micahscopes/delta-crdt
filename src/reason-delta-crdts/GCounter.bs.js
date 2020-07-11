@@ -3,48 +3,19 @@
 import * as $$Map from "bs-platform/lib/es6/map.js";
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
-import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
+import * as CrdtCore$DeltaCrdts from "./CrdtCore.bs.js";
 
 function Make(Id) {
   var State = $$Map.Make(Id);
-  var join = function (p, q) {
-    var state = Curry._3(State.merge, (function (param) {
-            return Caml_obj.caml_max;
-          }), p.state, q.state);
-    var id = p.id;
-    if (id !== undefined) {
-      var id$1 = Caml_option.valFromOption(id);
-      q.id !== undefined;
-      return {
-              id: Caml_option.some(id$1),
-              state: state
-            };
-    }
-    var id$2 = q.id;
-    if (id$2 !== undefined) {
-      return {
-              id: Caml_option.some(Caml_option.valFromOption(id$2)),
-              state: state
-            };
-    } else {
-      return {
-              id: undefined,
-              state: state
-            };
-    }
-  };
-  var replica = function (id) {
-    return {
-            id: Caml_option.some(id),
-            state: Curry._3(State.add, id, 0, State.empty)
-          };
-  };
+  var include = CrdtCore$DeltaCrdts.Make(State);
+  var replicaGenerator = include.replicaGenerator;
   var value = function (patch) {
     return Curry._3(State.fold, (function (param, v, accum) {
                   return v + accum | 0;
                 }), patch.state, 0);
   };
+  var replica = Curry._1(replicaGenerator, 0);
   var increment = function (replica) {
     var id = replica.id;
     if (id === undefined) {
@@ -68,9 +39,10 @@ function Make(Id) {
   };
   return {
           State: State,
-          join: join,
-          replica: replica,
+          replicaGenerator: replicaGenerator,
+          join: include.join,
           value: value,
+          replica: replica,
           increment: increment
         };
 }
