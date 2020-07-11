@@ -14,14 +14,19 @@ function Make(Id) {
                   return Caml_obj.caml_max;
                 }), p, q);
   };
+  var empty = State.empty;
   var Patch = {
-    join: join
+    join: join,
+    empty: empty
   };
-  var include = Crdt$DeltaCrdts.Make(Patch);
+  var include = Crdt$DeltaCrdts.Make({
+        empty: empty,
+        join: join
+      });
   var replica = function (id) {
     return {
             id: Caml_option.some(id),
-            state: Curry._3(State.add, id, 0, State.empty)
+            state: Curry._3(State.add, id, 0, empty)
           };
   };
   var value = function (patch) {
