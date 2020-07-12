@@ -7,30 +7,40 @@ import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
-function Make(Id) {
-  var State = $$Map.Make(Id);
+function State(Data) {
   var join = function (p, q) {
-    return Curry._3(State.merge, (function (param) {
+    return Curry._3(Data.merge, (function (param) {
                   return Caml_obj.caml_max;
                 }), p, q);
   };
-  var empty = State.empty;
-  var Patch = {
-    join: join,
-    empty: empty
+  return {
+          empty: Data.empty,
+          join: join
+        };
+}
+
+function Make(Id) {
+  var Data = $$Map.Make(Id);
+  var empty = Data.empty;
+  var join = function (p, q) {
+    return Curry._3(Data.merge, (function (param) {
+                  return Caml_obj.caml_max;
+                }), p, q);
   };
-  var include = Crdt$DeltaCrdts.Make({
-        empty: empty,
-        join: join
-      });
+  var State = {
+    empty: empty,
+    join: join
+  };
+  var partial_arg = Crdt$DeltaCrdts.Make;
+  var include = partial_arg(Id, State);
   var replica = function (id) {
     return {
             id: Caml_option.some(id),
-            state: Curry._3(State.add, id, 0, empty)
+            state: Curry._3(Data.add, id, 0, empty)
           };
   };
   var value = function (patch) {
-    return Curry._3(State.fold, (function (param, v, accum) {
+    return Curry._3(Data.fold, (function (param, v, accum) {
                   return v + accum | 0;
                 }), patch.state, 0);
   };
@@ -41,9 +51,9 @@ function Make(Id) {
     }
     var state = replica.state;
     var id$1 = Caml_option.valFromOption(id);
-    var newValue = Curry._2(State.find, id$1, state) + 1 | 0;
-    var delta = Curry._3(State.add, id$1, newValue, State.empty);
-    var state$1 = Curry._3(State.add, id$1, newValue, state);
+    var newValue = Curry._2(Data.find, id$1, state) + 1 | 0;
+    var delta = Curry._3(Data.add, id$1, newValue, empty);
+    var state$1 = Curry._3(Data.add, id$1, newValue, state);
     return /* Result */Block.__(0, [
               /* replica */{
                 id: Caml_option.some(id$1),
@@ -56,8 +66,8 @@ function Make(Id) {
             ]);
   };
   return {
+          Data: Data,
           State: State,
-          Patch: Patch,
           join: include.join,
           initialValue: 0,
           replica: replica,
@@ -67,6 +77,7 @@ function Make(Id) {
 }
 
 export {
+  State ,
   Make ,
   
 }

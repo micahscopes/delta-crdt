@@ -3,9 +3,15 @@
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 
-function Make(Patch) {
+function Make(Id, State) {
+  var replica = function (id) {
+    return {
+            id: id,
+            state: State.empty
+          };
+  };
   var join = function (p, q) {
-    var state = Curry._2(Patch.join, p.state, q.state);
+    var state = Curry._2(State.join, p.state, q.state);
     var id = p.id;
     if (id !== undefined) {
       var id$1 = Caml_option.valFromOption(id);
@@ -29,6 +35,7 @@ function Make(Patch) {
     }
   };
   return {
+          replica: replica,
           join: join
         };
 }
@@ -46,12 +53,9 @@ function Pair(A, B) {
             Curry._2(B.join, param[1], param$1[1])
           ];
   };
-  var Patch = {
-    empty: empty,
-    join: join
-  };
   return {
-          Patch: Patch
+          empty: empty,
+          join: join
         };
 }
 
@@ -92,12 +96,9 @@ function LexicographicPair(A, B) {
       
     }
   };
-  var Patch = {
-    empty: empty,
-    join: join
-  };
   return {
-          Patch: Patch
+          empty: empty,
+          join: join
         };
 }
 

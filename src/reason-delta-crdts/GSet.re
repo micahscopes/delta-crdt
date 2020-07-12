@@ -1,23 +1,23 @@
-module Make = (ElementType: Set.OrderedType) => {
-  module State = Set.Make(ElementType);
-  module Patch {
-    type t(_, _) = State.t
-    let join = (p,q) => State.union(p, q)
-    let empty = State.empty 
-  }
-  
-  module Core = Crdt.Make(Patch)
-  include Core
-  open State
+module State = (Data: Set.S) => {
+  type t = Data.t
+  let empty = Data.empty
+  let join = (p,q) => Data.union(p,q)
+}
 
-  let replica = id => {id: Some(id), state: Patch.empty};
+module Make = (Id: Set.OrderedType, Element: Set.OrderedType) => {
+  module Data = Set.Make(Element);
+  open Data
+  module State = State(Data)   
+  include Crdt.Make(Id, State)
+
+  let replica = id => {id: Some(id), state: empty};
 
   let elements = patch => patch.state; 
 
   let insert = (replica, element) => {
     switch replica {
       | {id: Some(id), state } => {
-        let delta = empty |> add(element);
+        let delta = State.empty |> add(element);
         let state = state |> add(element);
         Result({ replica: {id: Some(id), state}, delta: {id: None, state: delta} })
       }

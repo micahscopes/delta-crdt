@@ -1,26 +1,38 @@
-module type Patch {
-  type t('id, 'state)
-  let empty: t('id, 'state)
-  let join: (t('id, 'state), t('id, 'state)) => t('id, 'state);
+module type JoinableState {
+  type t 
+  let empty: t
+  let join: (t,t) => t 
 }
 
-module type ComparablePatch {
-  include Patch
+module type ComparableState {
+  include JoinableState;
   type result = Left | Both | Neither | Right;
   
-  let compare: (t('id, 'state), t('id, 'state)) => result
+  let compare: (t,t) => result
 }
 
-module Make = (Patch: Patch) => {
-  type t('id, 'state) = {id: option('id), state: 'state};
+module type Patch {
+  type t
+  type id
+  let replica: id => t
+  type mutation = Result{
+    replica: t,
+    delta: t
+  } | Invalid(t);  
+}
 
-  type mutationType('patch) = Result{
-    replica: 'patch,
-    delta: 'patch
-  } | Invalid('patch);
- 
+module Make = (Id: Map.OrderedType, State: JoinableState) => {
+  type id = Id.t   
+  type t = {id: option(id), state: State.t};
+  type mutation = Result{
+    replica: t,
+    delta: t
+  } | Invalid(t);  
+
+  let replica = id => {id, state: State.empty} 
+
   let join = (p, q) => {
-      let state = Patch.join(p.state, q.state);
+      let state = State.join(p.state, q.state);
       switch (p, q) {
         | ({id: None, _}, {id: Some(id), _})
         | ({id: Some(id), _}, {id: None, _}) => {id: Some(id), state}
@@ -30,26 +42,21 @@ module Make = (Patch: Patch) => {
   }
 }
 
-module Pair = (A: Patch, B: Patch) => {
-  module Patch {
-    type t('id, 'state) = (A.t('id, 'state), B.t('id, 'state))
-    let empty = (A.empty, B.empty)
-    let join = ((a, b), (a', b')) => (A.join(a, a'), B.join(b, b')) 
-  } 
+module Pair = (A: JoinableState, B: JoinableState) => {
+  type t = (A.t, B.t)
+  let empty = (A.empty, B.empty)
+  let join = ((a, b), (a', b')) => (A.join(a, a'), B.join(b, b')) 
 }
 
-module LexicographicPair = (A: ComparablePatch, B: Patch) => {
-  module Patch {
-    type t('id, 'state) = (A.t('id, 'state), B.t('id, 'state))
-    let empty = (A.empty, B.empty)
-    let join = ((a,b), (a',b')) => {
-      let priority = A.compare(a, a')
-      switch (priority) {
-        | Left => (a, b)
-        | Right => (a', b')
-        | Both => (a, B.join(b, b'))
-        | Neither => (A.join(a, a'), B.empty)
-      }
-    } 
-  }  
-}
+module LexicographicPair = (A: ComparableState, B: JoinableState) => {
+  let empty = (A.empty, B.empty)
+  let join = ((a,b), (a',b')) => {
+    let priority = A.compare(a, a')
+    switch (priority) {
+      | Left => (a, b)
+      | Right => (a', b')
+      | Both => (a, B.join(b, b'))
+      | Neither => (A.join(a, a'), B.empty)
+    }
+  } 
+}  

@@ -6,24 +6,32 @@ import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
-function Make(ElementType) {
-  var State = $$Set.Make(ElementType);
+function State(Data) {
   var join = function (p, q) {
-    return Curry._2(State.union, p, q);
+    return Curry._2(Data.union, p, q);
   };
-  var empty = State.empty;
-  var Patch = {
-    join: join,
-    empty: empty
+  return {
+          empty: Data.empty,
+          join: join
+        };
+}
+
+function Make(Id, $$Element) {
+  var Data = $$Set.Make($$Element);
+  var empty = Data.empty;
+  var join = function (p, q) {
+    return Curry._2(Data.union, p, q);
   };
-  var Core = Crdt$DeltaCrdts.Make({
-        empty: empty,
-        join: join
-      });
+  var State = {
+    empty: empty,
+    join: join
+  };
+  var partial_arg = Crdt$DeltaCrdts.Make;
+  var include = partial_arg(Id, State);
   var replica = function (id) {
     return {
             id: Caml_option.some(id),
-            state: empty
+            state: Data.empty
           };
   };
   var elements = function (patch) {
@@ -34,8 +42,8 @@ function Make(ElementType) {
     if (id === undefined) {
       return /* Invalid */Block.__(1, [replica]);
     }
-    var delta = Curry._2(State.add, element, State.empty);
-    var state = Curry._2(State.add, element, replica.state);
+    var delta = Curry._2(Data.add, element, empty);
+    var state = Curry._2(Data.add, element, replica.state);
     return /* Result */Block.__(0, [
               /* replica */{
                 id: Caml_option.some(Caml_option.valFromOption(id)),
@@ -48,10 +56,9 @@ function Make(ElementType) {
             ]);
   };
   return {
+          Data: Data,
           State: State,
-          Patch: Patch,
-          Core: Core,
-          join: Core.join,
+          join: include.join,
           replica: replica,
           elements: elements,
           insert: insert
@@ -59,6 +66,7 @@ function Make(ElementType) {
 }
 
 export {
+  State ,
   Make ,
   
 }

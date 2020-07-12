@@ -7,11 +7,17 @@ import * as GSet$DeltaCrdts from "../../src/reason-delta-crdts/GSet.bs.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
 
 Tape.test("test that we can make a GSet and add an element", (function (t) {
-        var GSetType = GSet$DeltaCrdts.Make({
+        var partial_arg = {
+          compare: $$String.compare
+        };
+        var partial_arg$1 = GSet$DeltaCrdts.Make;
+        var GSetType = (function (param) {
+              return partial_arg$1(partial_arg, param);
+            })({
               compare: $$String.compare
             });
         var el = "hello";
-        var expected = Curry._2(GSetType.State.add, el, GSetType.State.empty);
+        var expected = Curry._2(GSetType.Data.add, el, GSetType.Data.empty);
         var replica = Curry._1(GSetType.replica, "marge");
         var match = Curry._2(GSetType.insert, replica, el);
         if (match.tag) {
@@ -24,15 +30,21 @@ Tape.test("test that we can make a GSet and add an element", (function (t) {
                 ]
               ];
         }
-        Curry._2(t.ok, undefined, Curry._2(GSetType.State.equal, Curry._1(GSetType.elements, match[/* replica */0]), expected));
+        var arg = t.ok;
+        Curry._2(arg, undefined, Curry._2(GSetType.Data.equal, Curry._1(GSetType.elements, match[/* replica */0]), expected));
         return Curry._1(t.endTest, undefined);
       }));
 
 Tape.test("test that we can join deltas/replicas", (function (t) {
-        var GSetType = GSet$DeltaCrdts.Make({
+        var partial_arg = {
+          compare: $$String.compare
+        };
+        var partial_arg$1 = GSet$DeltaCrdts.Make;
+        var GSetType = (function (param) {
+              return partial_arg$1(partial_arg, param);
+            })({
               compare: $$String.compare
             });
-        var equal = GSetType.State.equal;
         var alice = Curry._1(GSetType.replica, "alice");
         var bob = Curry._1(GSetType.replica, "bob");
         var marge = Curry._1(GSetType.replica, "marge");
@@ -42,7 +54,7 @@ Tape.test("test that we can join deltas/replicas", (function (t) {
                 Caml_builtin_exceptions.match_failure,
                 /* tuple */[
                   "TestGSet.re",
-                  24,
+                  26,
                   6
                 ]
               ];
@@ -55,7 +67,7 @@ Tape.test("test that we can join deltas/replicas", (function (t) {
                 Caml_builtin_exceptions.match_failure,
                 /* tuple */[
                   "TestGSet.re",
-                  25,
+                  27,
                   6
                 ]
               ];
@@ -63,7 +75,7 @@ Tape.test("test that we can join deltas/replicas", (function (t) {
         var dBob = match$1[/* delta */1];
         var bob$1 = match$1[/* replica */0];
         var checkEqualElements = function (x, y) {
-          return Curry._2(equal, Curry._1(GSetType.elements, x), Curry._1(GSetType.elements, y));
+          return Curry._2(GSetType.Data.equal, Curry._1(GSetType.elements, x), Curry._1(GSetType.elements, y));
         };
         var arg = t.ok;
         Curry._2(arg, undefined, checkEqualElements(Curry._2(GSetType.join, alice$1, dBob), Curry._2(GSetType.join, bob$1, dAlice)));
