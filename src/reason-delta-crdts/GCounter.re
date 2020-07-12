@@ -1,7 +1,7 @@
 module Make = (Id: Map.OrderedType) => {
   module State = Map.Make(Id);
   module Patch {
-    type patchType(_, 'a) = State.t('a)
+    type t(_, 'a) = State.t('a)
     let join = (p,q) => State.merge((_) => max, p, q)
     let empty = State.empty 
   }
