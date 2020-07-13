@@ -14,11 +14,10 @@ module type ComparableState {
 module type Patch {
   type t
   type id
+  type mutation 
   let replica: id => t
-  type mutation = Result{
-    replica: t,
-    delta: t
-  } | Invalid(t);  
+  let join: (t,t) => t 
+  let deltaMutate: (t,t) => mutation
 }
 
 module Make = (Id: Map.OrderedType, State: JoinableState) => {
@@ -27,17 +26,26 @@ module Make = (Id: Map.OrderedType, State: JoinableState) => {
   type mutation = Result{
     replica: t,
     delta: t
-  } | Invalid(t);  
+  } | Invalid{replica: t, delta: option(t)};  
 
-  let replica = id => {id, state: State.empty} 
+  let replica = id => {id, state: State.empty}
+  let deltaOfState = (state: State.t) => {id: None, state: state} 
 
   let join = (p, q) => {
-      let state = State.join(p.state, q.state);
-      switch (p, q) {
-        | ({id: None, _}, {id: Some(id), _})
-        | ({id: Some(id), _}, {id: None, _}) => {id: Some(id), state}
-        | ({id: None, _}, {id: None, _}) => {id: None, state}
-        | ({id: Some(id)}, {id: Some(_)}) => {id: Some(id), state}
+    let id = switch (p.id, q.id) {
+      | (None, Some(id))
+      | (Some(id), None) => Some(id)
+      | (None, None) => None
+      | (Some(id), Some(_)) => Some(id)
+    }
+    let state = State.join(p.state, q.state);
+    {id, state}
+  }
+
+  let mutate = (replica, delta) => {
+    switch (replica.id, delta.id) {
+    | (Some(_), None) => Result{replica: join(replica, delta), delta}
+    | _ => Invalid{replica, delta: Some(delta)}
     }
   }
 }

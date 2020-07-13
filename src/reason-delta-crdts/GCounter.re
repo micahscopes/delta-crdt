@@ -18,12 +18,11 @@ module Make = (Id: Map.OrderedType) => {
   let increment = replica => {
     switch replica {
       | {id: Some(id), state } => {
-        let newValue = find(id, state) + 1;
-        let delta = State.empty |> add(id, newValue);
-        let state = state |> add(id, newValue);
-        Result({ replica: {id: Some(id), state}, delta: {id: None, state: delta} })
+        let newCount = find(id, state) + 1;
+        let delta = deltaOfState(State.empty |> add(id, newCount));
+        mutate(replica, delta)     
       }
-      | {id: None, _ } => Invalid(replica)
+      | {id: None, _ } => Invalid{replica, delta: None}
     }
   };
 }

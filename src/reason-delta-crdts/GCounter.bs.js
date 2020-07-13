@@ -33,6 +33,8 @@ function Make(Id) {
   };
   var partial_arg = Crdt$DeltaCrdts.Make;
   var include = partial_arg(Id, State);
+  var deltaOfState = include.deltaOfState;
+  var mutate = include.mutate;
   var replica = function (id) {
     return {
             id: Caml_option.some(id),
@@ -47,28 +49,22 @@ function Make(Id) {
   var increment = function (replica) {
     var id = replica.id;
     if (id === undefined) {
-      return /* Invalid */Block.__(1, [replica]);
+      return /* Invalid */Block.__(1, [
+                /* replica */replica,
+                /* delta */undefined
+              ]);
     }
-    var state = replica.state;
     var id$1 = Caml_option.valFromOption(id);
-    var newValue = Curry._2(Data.find, id$1, state) + 1 | 0;
-    var delta = Curry._3(Data.add, id$1, newValue, empty);
-    var state$1 = Curry._3(Data.add, id$1, newValue, state);
-    return /* Result */Block.__(0, [
-              /* replica */{
-                id: Caml_option.some(id$1),
-                state: state$1
-              },
-              /* delta */{
-                id: undefined,
-                state: delta
-              }
-            ]);
+    var newCount = Curry._2(Data.find, id$1, replica.state) + 1 | 0;
+    var delta = Curry._1(deltaOfState, Curry._3(Data.add, id$1, newCount, empty));
+    return Curry._2(mutate, replica, delta);
   };
   return {
           Data: Data,
           State: State,
+          deltaOfState: deltaOfState,
           join: include.join,
+          mutate: mutate,
           initialValue: 0,
           replica: replica,
           value: value,

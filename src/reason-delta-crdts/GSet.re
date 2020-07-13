@@ -15,13 +15,7 @@ module Make = (Id: Set.OrderedType, Element: Set.OrderedType) => {
   let elements = patch => patch.state; 
 
   let insert = (replica, element) => {
-    switch replica {
-      | {id: Some(id), state } => {
-        let delta = State.empty |> add(element);
-        let state = state |> add(element);
-        Result({ replica: {id: Some(id), state}, delta: {id: None, state: delta} })
-      }
-      | {id: None, _ } => Invalid(replica)
-    }
+    let delta = deltaOfState(State.empty |> add(element))
+    mutate(replica, delta)
   };
 }
