@@ -25,7 +25,7 @@ Tape.test("test that we can add and remove an element only once", (function (t) 
                 Caml_builtin_exceptions.match_failure,
                 /* tuple */[
                   "TestTwoPSet.re",
-                  11,
+                  10,
                   6
                 ]
               ];
@@ -39,7 +39,7 @@ Tape.test("test that we can add and remove an element only once", (function (t) 
                 Caml_builtin_exceptions.match_failure,
                 /* tuple */[
                   "TestTwoPSet.re",
-                  14,
+                  13,
                   6
                 ]
               ];
@@ -53,7 +53,7 @@ Tape.test("test that we can add and remove an element only once", (function (t) 
                 Caml_builtin_exceptions.match_failure,
                 /* tuple */[
                   "TestTwoPSet.re",
-                  17,
+                  16,
                   6
                 ]
               ];
@@ -67,7 +67,7 @@ Tape.test("test that we can add and remove an element only once", (function (t) 
                 Caml_builtin_exceptions.match_failure,
                 /* tuple */[
                   "TestTwoPSet.re",
-                  20,
+                  19,
                   6
                 ]
               ];
@@ -81,7 +81,7 @@ Tape.test("test that we can add and remove an element only once", (function (t) 
                 Caml_builtin_exceptions.match_failure,
                 /* tuple */[
                   "TestTwoPSet.re",
-                  23,
+                  22,
                   6
                 ]
               ];
