@@ -19,6 +19,9 @@ test("test that we can add and remove an element only once", t => {
 
   let Result{replica: marge, _} = remove(marge, el)
   T.Data.equal(T.Data.empty, elements(marge)) |> t.ok;
+
+  let Result{replica: marge, _} = insert(marge, el);
+  T.Data.equal(T.Data.empty, elements(marge)) |> t.ok;
   
   t.endTest();
 });

@@ -72,8 +72,22 @@ Tape.test("test that we can add and remove an element only once", (function (t) 
                 ]
               ];
         }
+        var marge$4 = match$3[/* replica */0];
         var arg$3 = t.ok;
-        Curry._2(arg$3, undefined, Curry._2(T.Data.equal, T.Data.empty, Curry._1(T.elements, match$3[/* replica */0])));
+        Curry._2(arg$3, undefined, Curry._2(T.Data.equal, T.Data.empty, Curry._1(T.elements, marge$4)));
+        var match$4 = Curry._2(T.insert, marge$4, el);
+        if (match$4.tag) {
+          throw [
+                Caml_builtin_exceptions.match_failure,
+                /* tuple */[
+                  "TestTwoPSet.re",
+                  23,
+                  6
+                ]
+              ];
+        }
+        var arg$4 = t.ok;
+        Curry._2(arg$4, undefined, Curry._2(T.Data.equal, T.Data.empty, Curry._1(T.elements, match$4[/* replica */0])));
         return Curry._1(t.endTest, undefined);
       }));
 
