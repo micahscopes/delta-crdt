@@ -17,7 +17,6 @@ module type Patch {
   type mutation 
   let replica: id => t
   let join: (t,t) => t 
-  let deltaMutate: (t,t) => mutation
 }
 
 module Make = (Id: Map.OrderedType, State: JoinableState) => {

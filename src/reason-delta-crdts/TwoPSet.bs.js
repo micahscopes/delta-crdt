@@ -24,7 +24,7 @@ function Make(Id, $$Element) {
   };
   var elements = function (param) {
     var match = param.state;
-    return Curry._1(Data.elements, Curry._2(Data.diff, match[0], match[1]));
+    return Curry._2(Data.diff, match[0], match[1]);
   };
   var insert = function (patch, element) {
     var delta = Curry._1(deltaOfState, /* tuple */[

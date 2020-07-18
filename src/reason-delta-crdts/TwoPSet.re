@@ -9,7 +9,7 @@ module Make = (Id: Set.OrderedType, Element: Set.OrderedType) => {
   let replica = id => {id: Some(id), state: State.empty};
 
   let elements = ({id: _, state: (addSet, removeSet)}) =>
-    diff(addSet, removeSet) |> elements;
+    diff(addSet, removeSet);
   
   let insert = (patch, element) => {
     let delta = deltaOfState((empty |> add(element), empty))
