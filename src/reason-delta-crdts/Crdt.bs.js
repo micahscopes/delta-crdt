@@ -35,12 +35,6 @@ function Make(Id, State) {
             state: State.empty
           };
   };
-  var deltaOfState = function (state) {
-    return {
-            id: undefined,
-            state: state
-          };
-  };
   var join = function (p, q) {
     var match = p.id;
     var match$1 = q.id;
@@ -57,10 +51,17 @@ function Make(Id, State) {
             state: state
           };
   };
-  var mutate = function (replica, delta) {
+  var patchOfState = function (idOpt, state) {
+    var id = idOpt !== undefined ? Caml_option.valFromOption(idOpt) : undefined;
+    return {
+            id: id,
+            state: state
+          };
+  };
+  var mutate = function (replica, deltaMutation) {
+    var delta = patchOfState(undefined, deltaMutation);
     var match = replica.id;
-    var match$1 = delta.id;
-    if (match !== undefined && match$1 === undefined) {
+    if (match !== undefined) {
       return /* Result */Block.__(0, [
                 /* replica */join(replica, delta),
                 /* delta */delta
@@ -74,8 +75,8 @@ function Make(Id, State) {
   };
   return {
           replica: replica,
-          deltaOfState: deltaOfState,
           join: join,
+          patchOfState: patchOfState,
           mutate: mutate
         };
 }

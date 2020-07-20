@@ -66,7 +66,6 @@ module Make = (Id: Map.OrderedType, State: JoinableState) => {
       };
 
   let replica = id => {id, state: State.empty};
-  let deltaOfState = (state: State.t) => {id: None, state};
 
   let join = (p, q) => {
     let id =
@@ -80,11 +79,15 @@ module Make = (Id: Map.OrderedType, State: JoinableState) => {
     {id, state};
   };
 
-  let mutate = (replica, delta) =>
-    switch (replica.id, delta.id) {
-    | (Some(_), None) => Result({replica: join(replica, delta), delta})
+  let patchOfState = (~id=None, state: State.t) => {id, state};
+
+  let mutate = (replica: t, deltaMutation: State.t) => {
+    let delta = patchOfState(deltaMutation);
+    switch (replica.id) {
+    | Some(_) => Result({replica: join(replica, delta), delta})
     | _ => Invalid({replica, delta: Some(delta)})
     };
+  };
 };
 
 module Pair = (A: JoinableState, B: JoinableState) => {

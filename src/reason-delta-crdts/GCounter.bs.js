@@ -14,19 +14,19 @@ function State(Data) {
                   return Caml_obj.caml_max;
                 }), p, q);
   };
-  var increment = function (state, id) {
-    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
-  };
   var value = function (state) {
     return Curry._3(Data.fold, (function (param, v, accum) {
                   return v + accum | 0;
                 }), state, 0);
   };
+  var increment = function (state, id) {
+    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
+  };
   return {
           empty: empty,
           join: join,
-          increment: increment,
-          value: value
+          value: value,
+          increment: increment
         };
 }
 
@@ -38,23 +38,22 @@ function Make(Id) {
                   return Caml_obj.caml_max;
                 }), p, q);
   };
-  var increment = function (state, id) {
-    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
-  };
   var value = function (state) {
     return Curry._3(Data.fold, (function (param, v, accum) {
                   return v + accum | 0;
                 }), state, 0);
   };
+  var increment = function (state, id) {
+    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
+  };
   var State = {
     empty: empty,
     join: join,
-    increment: increment,
-    value: value
+    value: value,
+    increment: increment
   };
   var partial_arg = Crdt$DeltaCrdts.Make;
   var include = partial_arg(Id, State);
-  var deltaOfState = include.deltaOfState;
   var mutate = include.mutate;
   var replica = function (id) {
     return {
@@ -68,7 +67,7 @@ function Make(Id) {
   var increment$1 = function (replica) {
     var id = replica.id;
     if (id !== undefined) {
-      return Curry._2(mutate, replica, Curry._1(deltaOfState, increment(replica.state, Caml_option.valFromOption(id))));
+      return Curry._2(mutate, replica, increment(replica.state, Caml_option.valFromOption(id)));
     } else {
       return /* Invalid */Block.__(1, [
                 /* replica */replica,
@@ -79,8 +78,8 @@ function Make(Id) {
   return {
           Data: Data,
           State: State,
-          deltaOfState: deltaOfState,
           join: include.join,
+          patchOfState: include.patchOfState,
           mutate: mutate,
           initialValue: 0,
           replica: replica,

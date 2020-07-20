@@ -3,8 +3,8 @@ module State = (Data: Map.S) => {
   type t = Data.t(int);
   let empty = Data.empty;
   let join = (p, q) => Data.merge(_ => max, p, q);
-  let increment = (state, id) => empty |> add(id, find(id, state) + 1);
   let value = state => fold((_, v, accum) => v + accum, state, 0);
+  let increment = (state, id) => empty |> add(id, find(id, state) + 1);
 };
 
 module Make = (Id: Map.OrderedType) => {
@@ -23,8 +23,7 @@ module Make = (Id: Map.OrderedType) => {
 
   let increment = replica =>
     switch (replica) {
-    | {id: Some(id), state} =>
-      State.increment(state, id) |> deltaOfState |> mutate(replica)
+    | {id: Some(id), state} => State.increment(state, id) |> mutate(replica)
     | {id: None, _} => Invalid({replica, delta: None})
     };
 };

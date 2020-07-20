@@ -6,12 +6,17 @@ import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
 function State(Data) {
+  var empty = Data.empty;
   var join = function (p, q) {
     return Curry._2(Data.union, p, q);
   };
+  var insert = function (element) {
+    return Curry._2(Data.add, element, empty);
+  };
   return {
-          empty: Data.empty,
-          join: join
+          empty: empty,
+          join: join,
+          insert: insert
         };
 }
 
@@ -21,13 +26,16 @@ function Make(Id, $$Element) {
   var join = function (p, q) {
     return Curry._2(Data.union, p, q);
   };
+  var insert = function (element) {
+    return Curry._2(Data.add, element, empty);
+  };
   var State = {
     empty: empty,
-    join: join
+    join: join,
+    insert: insert
   };
   var partial_arg = Crdt$DeltaCrdts.Make;
   var include = partial_arg(Id, State);
-  var deltaOfState = include.deltaOfState;
   var mutate = include.mutate;
   var replica = function (id) {
     return {
@@ -38,19 +46,18 @@ function Make(Id, $$Element) {
   var elements = function (patch) {
     return patch.state;
   };
-  var insert = function (replica, element) {
-    var delta = Curry._1(deltaOfState, Curry._2(Data.add, element, empty));
-    return Curry._2(mutate, replica, delta);
+  var insert$1 = function (replica, element) {
+    return Curry._2(mutate, replica, Curry._2(Data.add, element, empty));
   };
   return {
           Data: Data,
           State: State,
-          deltaOfState: deltaOfState,
           join: include.join,
+          patchOfState: include.patchOfState,
           mutate: mutate,
           replica: replica,
           elements: elements,
-          insert: insert
+          insert: insert$1
         };
 }
 

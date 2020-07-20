@@ -7,33 +7,91 @@ import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 import * as GCounter$DeltaCrdts from "./GCounter.bs.js";
 
+function State(Id) {
+  var Data = $$Map.Make(Id);
+  var Positive = GCounter$DeltaCrdts.State(Data);
+  var Negative = GCounter$DeltaCrdts.State(Data);
+  var partial_arg = Crdt$DeltaCrdts.Pair;
+  var include = partial_arg(Positive, Negative);
+  var increment = function (id, param) {
+    return /* tuple */[
+            Curry._2(Positive.increment, param[0], id),
+            Negative.empty
+          ];
+  };
+  var decrement = function (id, param) {
+    return /* tuple */[
+            Positive.empty,
+            Curry._2(Negative.increment, param[1], id)
+          ];
+  };
+  var value = function (param) {
+    return Curry._1(Positive.value, param[0]) - Curry._1(Negative.value, param[1]) | 0;
+  };
+  return {
+          Data: Data,
+          Positive: Positive,
+          Negative: Negative,
+          empty: include.empty,
+          join: include.join,
+          increment: increment,
+          decrement: decrement,
+          value: value
+        };
+}
+
 function Make(Id) {
   var Data = $$Map.Make(Id);
   var Positive = GCounter$DeltaCrdts.State(Data);
   var Negative = GCounter$DeltaCrdts.State(Data);
   var partial_arg = Crdt$DeltaCrdts.Pair;
-  var State = partial_arg(Positive, Negative);
+  var include = partial_arg(Positive, Negative);
+  var empty = include.empty;
+  var join = include.join;
+  var increment = function (id, param) {
+    return /* tuple */[
+            Curry._2(Positive.increment, param[0], id),
+            Negative.empty
+          ];
+  };
+  var decrement = function (id, param) {
+    return /* tuple */[
+            Positive.empty,
+            Curry._2(Negative.increment, param[1], id)
+          ];
+  };
+  var value = function (param) {
+    return Curry._1(Positive.value, param[0]) - Curry._1(Negative.value, param[1]) | 0;
+  };
+  var State = {
+    Data: Data,
+    Positive: Positive,
+    Negative: Negative,
+    empty: empty,
+    join: join,
+    increment: increment,
+    decrement: decrement,
+    value: value
+  };
   var partial_arg$1 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$1(Id, State);
-  var deltaOfState = include.deltaOfState;
-  var mutate = include.mutate;
+  var include$1 = partial_arg$1(Id, {
+        empty: empty,
+        join: join
+      });
+  var mutate = include$1.mutate;
   var replica = function (id) {
     return {
             id: Caml_option.some(id),
-            state: State.empty
+            state: empty
           };
   };
-  var value = function (param) {
-    var match = param.state;
-    return Curry._1(Positive.value, match[0]) - Curry._1(Negative.value, match[1]) | 0;
+  var value$1 = function (param) {
+    return value(param.state);
   };
-  var increment = function (replica) {
+  var increment$1 = function (replica) {
     var id = replica.id;
     if (id !== undefined) {
-      return Curry._2(mutate, replica, Curry._1(deltaOfState, /* tuple */[
-                      Curry._2(Positive.increment, replica.state[0], Caml_option.valFromOption(id)),
-                      Negative.empty
-                    ]));
+      return Curry._2(mutate, replica, increment(Caml_option.valFromOption(id), replica.state));
     } else {
       return /* Invalid */Block.__(1, [
                 /* replica */replica,
@@ -41,13 +99,10 @@ function Make(Id) {
               ]);
     }
   };
-  var decrement = function (replica) {
+  var decrement$1 = function (replica) {
     var id = replica.id;
     if (id !== undefined) {
-      return Curry._2(mutate, replica, Curry._1(deltaOfState, /* tuple */[
-                      Positive.empty,
-                      Curry._2(Negative.increment, replica.state[1], Caml_option.valFromOption(id))
-                    ]));
+      return Curry._2(mutate, replica, decrement(Caml_option.valFromOption(id), replica.state));
     } else {
       return /* Invalid */Block.__(1, [
                 /* replica */replica,
@@ -56,21 +111,19 @@ function Make(Id) {
     }
   };
   return {
-          Data: Data,
-          Positive: Positive,
-          Negative: Negative,
           State: State,
-          deltaOfState: deltaOfState,
-          join: include.join,
+          join: include$1.join,
+          patchOfState: include$1.patchOfState,
           mutate: mutate,
           replica: replica,
-          value: value,
-          increment: increment,
-          decrement: decrement
+          value: value$1,
+          increment: increment$1,
+          decrement: decrement$1
         };
 }
 
 export {
+  State ,
   Make ,
   
 }

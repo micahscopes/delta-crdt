@@ -6,56 +6,113 @@ import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 import * as GSet$DeltaCrdts from "./GSet.bs.js";
 
-function Make(Id, $$Element) {
+function State($$Element) {
   var Data = $$Set.Make($$Element);
   var AddSet = GSet$DeltaCrdts.State(Data);
   var RemoveSet = GSet$DeltaCrdts.State(Data);
   var partial_arg = Crdt$DeltaCrdts.Pair;
-  var State = partial_arg(AddSet, RemoveSet);
-  var partial_arg$1 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$1(Id, State);
-  var deltaOfState = include.deltaOfState;
-  var mutate = include.mutate;
-  var replica = function (id) {
-    return {
-            id: Caml_option.some(id),
-            state: State.empty
-          };
+  var include = partial_arg(AddSet, RemoveSet);
+  var insert = function (element) {
+    return /* tuple */[
+            Curry._1(AddSet.insert, element),
+            RemoveSet.empty
+          ];
+  };
+  var remove = function (element) {
+    return /* tuple */[
+            AddSet.empty,
+            Curry._1(RemoveSet.insert, element)
+          ];
   };
   var elements = function (param) {
-    var match = param.state;
-    return Curry._2(Data.diff, match[0], match[1]);
-  };
-  var insert = function (patch, element) {
-    var delta = Curry._1(deltaOfState, /* tuple */[
-          Curry._2(Data.add, element, Data.empty),
-          Data.empty
-        ]);
-    return Curry._2(mutate, patch, delta);
-  };
-  var remove = function (patch, element) {
-    var delta = Curry._1(deltaOfState, /* tuple */[
-          Data.empty,
-          Curry._2(Data.add, element, Data.empty)
-        ]);
-    return Curry._2(mutate, patch, delta);
+    return Curry._2(Data.diff, param[0], param[1]);
   };
   return {
           Data: Data,
           AddSet: AddSet,
           RemoveSet: RemoveSet,
-          State: State,
-          deltaOfState: deltaOfState,
+          empty: include.empty,
           join: include.join,
+          insert: insert,
+          remove: remove,
+          elements: elements
+        };
+}
+
+function Make(Id, $$Element) {
+  var Data = $$Set.Make($$Element);
+  var AddSet = GSet$DeltaCrdts.State(Data);
+  var RemoveSet = GSet$DeltaCrdts.State(Data);
+  var partial_arg = Crdt$DeltaCrdts.Pair;
+  var include = partial_arg(AddSet, RemoveSet);
+  var empty = include.empty;
+  var join = include.join;
+  var insert = function (element) {
+    return /* tuple */[
+            Curry._1(AddSet.insert, element),
+            RemoveSet.empty
+          ];
+  };
+  var remove = function (element) {
+    return /* tuple */[
+            AddSet.empty,
+            Curry._1(RemoveSet.insert, element)
+          ];
+  };
+  var elements = function (param) {
+    return Curry._2(Data.diff, param[0], param[1]);
+  };
+  var State = {
+    Data: Data,
+    AddSet: AddSet,
+    RemoveSet: RemoveSet,
+    empty: empty,
+    join: join,
+    insert: insert,
+    remove: remove,
+    elements: elements
+  };
+  var partial_arg$1 = Crdt$DeltaCrdts.Make;
+  var include$1 = partial_arg$1(Id, {
+        empty: empty,
+        join: join
+      });
+  var mutate = include$1.mutate;
+  var replica = function (id) {
+    return {
+            id: Caml_option.some(id),
+            state: empty
+          };
+  };
+  var elements$1 = function (param) {
+    return elements(param.state);
+  };
+  var insert$1 = function (patch, element) {
+    return Curry._2(mutate, patch, /* tuple */[
+                Curry._1(AddSet.insert, element),
+                RemoveSet.empty
+              ]);
+  };
+  var remove$1 = function (patch, element) {
+    return Curry._2(mutate, patch, /* tuple */[
+                AddSet.empty,
+                Curry._1(RemoveSet.insert, element)
+              ]);
+  };
+  return {
+          State: State,
+          join: include$1.join,
+          patchOfState: include$1.patchOfState,
           mutate: mutate,
           replica: replica,
-          elements: elements,
-          insert: insert,
-          remove: remove
+          elements: elements$1,
+          insert: insert$1,
+          remove: remove$1
         };
 }
 
 export {
+  State ,
   Make ,
   
 }

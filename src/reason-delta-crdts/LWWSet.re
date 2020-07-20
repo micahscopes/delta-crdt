@@ -1,7 +1,49 @@
 module type InOrOut = {
-  include Crdt.JoinableState;
+  type t = bool;
+  let join: (t, t) => t;
+  let empty: t;
   let isIn: t;
   let isOut: t;
+};
+
+module State =
+       (
+         Element: Map.OrderedType,
+         Timestamp: Crdt.ComparableState,
+         InOrOut: InOrOut,
+       ) => {
+  module LexState = Crdt.LexicographicPair(Timestamp, InOrOut);
+  module Data = Map.Make(Element);
+  type t = Data.t(LexState.t);
+  let empty = Data.empty;
+  let insert = (element, time) =>
+    Data.add(element, (time, InOrOut.isIn), empty);
+  let remove = (element, time) =>
+    Data.add(element, (time, InOrOut.isOut), empty);
+  let join = (m, m') =>
+    Data.merge(
+      (_, mState, mState') =>
+        switch (mState, mState') {
+        | (Some(x), Some(y)) => Some(LexState.join(x, y))
+        | (Some(x), None)
+        | (None, Some(x)) => Some(LexState.join(x, LexState.empty))
+        | _ => None
+        },
+      m,
+      m',
+    );
+
+  module ElSet = Set.Make(Element);
+  let elements = m =>
+    Data.fold(
+      (elementKey, (_, isIn), elements) =>
+        switch (isIn) {
+        | true => ElSet.add(elementKey, elements)
+        | _ => elements
+        },
+      m,
+      ElSet.empty,
+    );
 };
 
 module Make =
@@ -13,45 +55,14 @@ module Make =
        ) => {
   module LexState = Crdt.LexicographicPair(Timestamp, InOrOut);
   module Data = Map.Make(Element);
-  module State = {
-    type t = Data.t(LexState.t);
-    let empty = Data.empty;
-    let insert = (element, time) =>
-      Data.add(element, (time, InOrOut.isIn), empty);
-    let remove = (element, time) =>
-      Data.add(element, (time, InOrOut.isOut), empty);
-    let join = (m, m') =>
-      Data.merge(
-        (_, mState, mState') =>
-          switch (mState, mState') {
-          | (Some(x), Some(y)) => Some(LexState.join(x, y))
-          | (Some(x), None)
-          | (None, Some(x)) => Some(LexState.join(x, LexState.empty))
-          | _ => None
-          },
-        m,
-        m',
-      );
-  };
-
+  module State = State(Element, Timestamp, InOrOut);
   include Crdt.Make(Id, State);
 
-  module ElSet = Set.Make(Element);
-  let elements = m =>
-    Data.fold(
-      (key, (_, isIn), elSet) =>
-        switch (isIn) {
-        | true => ElSet.add(key, elSet)
-        | _ => elSet
-        },
-      m,
-      ElSet.empty,
-    );
-
+  let elements = ({state, _}) => State.elements(state);
   let insert = (replica, element, time) =>
-    State.insert(element, time) |> deltaOfState |> mutate(replica);
+    State.insert(element, time) |> mutate(replica);
   let remove = (replica, element, time) =>
-    State.remove(element, time) |> deltaOfState |> mutate(replica);
+    State.remove(element, time) |> mutate(replica);
 };
 
 module InOrOut = {
@@ -61,12 +72,12 @@ module InOrOut = {
   let isIn = true;
 };
 
-module IsInAddStays = {
+module InOrOutAddStays = {
   include InOrOut;
   let join = (a, b) => a || b;
 };
 
-module IsInRemoveStays = {
+module InOrOutRemoveStays = {
   include InOrOut;
   let join = (a, b) => a && b;
 };
@@ -77,7 +88,7 @@ module AddWins =
          Element: Map.OrderedType,
          Timestamp: Crdt.ComparableState,
        ) => {
-  module Make = Make(Id, Element, Timestamp, IsInAddStays);
+  module Make = Make(Id, Element, Timestamp, InOrOutAddStays);
 };
 
 module RemoveWins =
@@ -86,5 +97,5 @@ module RemoveWins =
          Element: Map.OrderedType,
          Timestamp: Crdt.ComparableState,
        ) => {
-  module Make = Make(Id, Element, Timestamp, IsInRemoveStays);
+  module Make = Make(Id, Element, Timestamp, InOrOutRemoveStays);
 };

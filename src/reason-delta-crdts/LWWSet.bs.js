@@ -5,9 +5,12 @@ import * as $$Set from "bs-platform/lib/es6/set.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
-function Make(Id, $$Element, Timestamp, InOrOut) {
+function State($$Element, Timestamp, InOrOut) {
   var partial_arg = Crdt$DeltaCrdts.LexicographicPair;
-  var LexState = partial_arg(Timestamp, InOrOut);
+  var LexState = partial_arg(Timestamp, {
+        empty: InOrOut.empty,
+        join: InOrOut.join
+      });
   var Data = $$Map.Make($$Element);
   var empty = Data.empty;
   var insert = function (element, time) {
@@ -37,45 +40,113 @@ function Make(Id, $$Element, Timestamp, InOrOut) {
                   }
                 }), m, m$prime);
   };
-  var State = {
-    empty: empty,
-    insert: insert,
-    remove: remove,
-    join: join
-  };
-  var partial_arg$1 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$1(Id, {
-        empty: empty,
-        join: join
-      });
-  var deltaOfState = include.deltaOfState;
-  var mutate = include.mutate;
   var ElSet = $$Set.Make($$Element);
   var elements = function (m) {
-    return Curry._3(Data.fold, (function (key, param, elSet) {
+    return Curry._3(Data.fold, (function (elementKey, param, elements) {
                   if (param[1]) {
-                    return Curry._2(ElSet.add, key, elSet);
+                    return Curry._2(ElSet.add, elementKey, elements);
                   } else {
-                    return elSet;
+                    return elements;
                   }
                 }), m, ElSet.empty);
   };
+  return {
+          LexState: LexState,
+          Data: Data,
+          empty: empty,
+          insert: insert,
+          remove: remove,
+          join: join,
+          ElSet: ElSet,
+          elements: elements
+        };
+}
+
+function Make(Id, $$Element, Timestamp, InOrOut) {
+  var partial_arg = Crdt$DeltaCrdts.LexicographicPair;
+  var LexState = partial_arg(Timestamp, {
+        empty: InOrOut.empty,
+        join: InOrOut.join
+      });
+  var Data = $$Map.Make($$Element);
+  var partial_arg$1 = Crdt$DeltaCrdts.LexicographicPair;
+  var LexState$1 = partial_arg$1(Timestamp, {
+        empty: InOrOut.empty,
+        join: InOrOut.join
+      });
+  var Data$1 = $$Map.Make($$Element);
+  var empty = Data$1.empty;
+  var insert = function (element, time) {
+    return Curry._3(Data$1.add, element, /* tuple */[
+                time,
+                InOrOut.isIn
+              ], empty);
+  };
+  var remove = function (element, time) {
+    return Curry._3(Data$1.add, element, /* tuple */[
+                time,
+                InOrOut.isOut
+              ], empty);
+  };
+  var join = function (m, m$prime) {
+    return Curry._3(Data$1.merge, (function (param, mState, mState$prime) {
+                  if (mState !== undefined) {
+                    if (mState$prime !== undefined) {
+                      return Curry._2(LexState$1.join, mState, mState$prime);
+                    } else {
+                      return Curry._2(LexState$1.join, mState, LexState$1.empty);
+                    }
+                  } else if (mState$prime !== undefined) {
+                    return Curry._2(LexState$1.join, mState$prime, LexState$1.empty);
+                  } else {
+                    return ;
+                  }
+                }), m, m$prime);
+  };
+  var ElSet = $$Set.Make($$Element);
+  var elements = function (m) {
+    return Curry._3(Data$1.fold, (function (elementKey, param, elements) {
+                  if (param[1]) {
+                    return Curry._2(ElSet.add, elementKey, elements);
+                  } else {
+                    return elements;
+                  }
+                }), m, ElSet.empty);
+  };
+  var State = {
+    LexState: LexState$1,
+    Data: Data$1,
+    empty: empty,
+    insert: insert,
+    remove: remove,
+    join: join,
+    ElSet: ElSet,
+    elements: elements
+  };
+  var partial_arg$2 = Crdt$DeltaCrdts.Make;
+  var include = partial_arg$2(Id, {
+        empty: empty,
+        join: join
+      });
+  var mutate = include.mutate;
+  var elements$1 = function (param) {
+    return Curry._1(elements, param.state);
+  };
   var insert$1 = function (replica, element, time) {
-    return Curry._2(mutate, replica, Curry._1(deltaOfState, insert(element, time)));
+    return Curry._2(mutate, replica, Curry._2(insert, element, time));
   };
   var remove$1 = function (replica, element, time) {
-    return Curry._2(mutate, replica, Curry._1(deltaOfState, remove(element, time)));
+    return Curry._2(mutate, replica, Curry._2(remove, element, time));
   };
   return {
           LexState: LexState,
           Data: Data,
           State: State,
           replica: include.replica,
-          deltaOfState: deltaOfState,
           join: include.join,
+          patchOfState: include.patchOfState,
           mutate: mutate,
-          ElSet: ElSet,
-          elements: elements,
+          elements: elements$1,
           insert: insert$1,
           remove: remove$1
         };
@@ -95,7 +166,7 @@ function join(a, b) {
   }
 }
 
-var IsInAddStays = {
+var InOrOutAddStays = {
   empty: false,
   isOut: false,
   isIn: true,
@@ -110,7 +181,7 @@ function join$1(a, b) {
   }
 }
 
-var IsInRemoveStays = {
+var InOrOutRemoveStays = {
   empty: false,
   isOut: false,
   isIn: true,
@@ -118,84 +189,93 @@ var IsInRemoveStays = {
 };
 
 function AddWins(Id, $$Element, Timestamp) {
-  var param = {
-    empty: false,
-    join: join,
-    isIn: true,
-    isOut: false
-  };
   var partial_arg = Crdt$DeltaCrdts.LexicographicPair;
-  var LexState = partial_arg(Timestamp, param);
+  var LexState = partial_arg(Timestamp, {
+        empty: false,
+        join: join
+      });
   var Data = $$Map.Make($$Element);
-  var empty = Data.empty;
+  var partial_arg$1 = Crdt$DeltaCrdts.LexicographicPair;
+  var LexState$1 = partial_arg$1(Timestamp, {
+        empty: false,
+        join: join
+      });
+  var Data$1 = $$Map.Make($$Element);
+  var empty = Data$1.empty;
   var insert = function (element, time) {
-    return Curry._3(Data.add, element, /* tuple */[
+    return Curry._3(Data$1.add, element, /* tuple */[
                 time,
                 true
               ], empty);
   };
   var remove = function (element, time) {
-    return Curry._3(Data.add, element, /* tuple */[
+    return Curry._3(Data$1.add, element, /* tuple */[
                 time,
                 false
               ], empty);
   };
   var join$2 = function (m, m$prime) {
-    return Curry._3(Data.merge, (function (param, mState, mState$prime) {
+    return Curry._3(Data$1.merge, (function (param, mState, mState$prime) {
                   if (mState !== undefined) {
                     if (mState$prime !== undefined) {
-                      return Curry._2(LexState.join, mState, mState$prime);
+                      return Curry._2(LexState$1.join, mState, mState$prime);
                     } else {
-                      return Curry._2(LexState.join, mState, LexState.empty);
+                      return Curry._2(LexState$1.join, mState, LexState$1.empty);
                     }
                   } else if (mState$prime !== undefined) {
-                    return Curry._2(LexState.join, mState$prime, LexState.empty);
+                    return Curry._2(LexState$1.join, mState$prime, LexState$1.empty);
                   } else {
                     return ;
                   }
                 }), m, m$prime);
   };
-  var State = {
-    empty: empty,
-    insert: insert,
-    remove: remove,
-    join: join$2
-  };
-  var partial_arg$1 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$1(Id, {
-        empty: empty,
-        join: join$2
-      });
-  var deltaOfState = include.deltaOfState;
-  var mutate = include.mutate;
   var ElSet = $$Set.Make($$Element);
   var elements = function (m) {
-    return Curry._3(Data.fold, (function (key, param, elSet) {
+    return Curry._3(Data$1.fold, (function (elementKey, param, elements) {
                   if (param[1]) {
-                    return Curry._2(ElSet.add, key, elSet);
+                    return Curry._2(ElSet.add, elementKey, elements);
                   } else {
-                    return elSet;
+                    return elements;
                   }
                 }), m, ElSet.empty);
   };
+  var State = {
+    LexState: LexState$1,
+    Data: Data$1,
+    empty: empty,
+    insert: insert,
+    remove: remove,
+    join: join$2,
+    ElSet: ElSet,
+    elements: elements
+  };
+  var partial_arg$2 = Crdt$DeltaCrdts.Make;
+  var include = partial_arg$2(Id, {
+        empty: empty,
+        join: join$2
+      });
+  var mutate = include.mutate;
+  var elements$1 = function (param) {
+    return Curry._1(elements, param.state);
+  };
   var insert$1 = function (replica, element, time) {
-    return Curry._2(mutate, replica, Curry._1(deltaOfState, insert(element, time)));
+    return Curry._2(mutate, replica, Curry._2(insert, element, time));
   };
   var remove$1 = function (replica, element, time) {
-    return Curry._2(mutate, replica, Curry._1(deltaOfState, remove(element, time)));
+    return Curry._2(mutate, replica, Curry._2(remove, element, time));
   };
   var Make_replica = include.replica;
   var Make_join = include.join;
+  var Make_patchOfState = include.patchOfState;
   var Make = {
     LexState: LexState,
     Data: Data,
     State: State,
     replica: Make_replica,
-    deltaOfState: deltaOfState,
     join: Make_join,
+    patchOfState: Make_patchOfState,
     mutate: mutate,
-    ElSet: ElSet,
-    elements: elements,
+    elements: elements$1,
     insert: insert$1,
     remove: remove$1
   };
@@ -205,84 +285,93 @@ function AddWins(Id, $$Element, Timestamp) {
 }
 
 function RemoveWins(Id, $$Element, Timestamp) {
-  var param = {
-    empty: false,
-    join: join$1,
-    isIn: true,
-    isOut: false
-  };
   var partial_arg = Crdt$DeltaCrdts.LexicographicPair;
-  var LexState = partial_arg(Timestamp, param);
+  var LexState = partial_arg(Timestamp, {
+        empty: false,
+        join: join$1
+      });
   var Data = $$Map.Make($$Element);
-  var empty = Data.empty;
+  var partial_arg$1 = Crdt$DeltaCrdts.LexicographicPair;
+  var LexState$1 = partial_arg$1(Timestamp, {
+        empty: false,
+        join: join$1
+      });
+  var Data$1 = $$Map.Make($$Element);
+  var empty = Data$1.empty;
   var insert = function (element, time) {
-    return Curry._3(Data.add, element, /* tuple */[
+    return Curry._3(Data$1.add, element, /* tuple */[
                 time,
                 true
               ], empty);
   };
   var remove = function (element, time) {
-    return Curry._3(Data.add, element, /* tuple */[
+    return Curry._3(Data$1.add, element, /* tuple */[
                 time,
                 false
               ], empty);
   };
   var join$2 = function (m, m$prime) {
-    return Curry._3(Data.merge, (function (param, mState, mState$prime) {
+    return Curry._3(Data$1.merge, (function (param, mState, mState$prime) {
                   if (mState !== undefined) {
                     if (mState$prime !== undefined) {
-                      return Curry._2(LexState.join, mState, mState$prime);
+                      return Curry._2(LexState$1.join, mState, mState$prime);
                     } else {
-                      return Curry._2(LexState.join, mState, LexState.empty);
+                      return Curry._2(LexState$1.join, mState, LexState$1.empty);
                     }
                   } else if (mState$prime !== undefined) {
-                    return Curry._2(LexState.join, mState$prime, LexState.empty);
+                    return Curry._2(LexState$1.join, mState$prime, LexState$1.empty);
                   } else {
                     return ;
                   }
                 }), m, m$prime);
   };
-  var State = {
-    empty: empty,
-    insert: insert,
-    remove: remove,
-    join: join$2
-  };
-  var partial_arg$1 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$1(Id, {
-        empty: empty,
-        join: join$2
-      });
-  var deltaOfState = include.deltaOfState;
-  var mutate = include.mutate;
   var ElSet = $$Set.Make($$Element);
   var elements = function (m) {
-    return Curry._3(Data.fold, (function (key, param, elSet) {
+    return Curry._3(Data$1.fold, (function (elementKey, param, elements) {
                   if (param[1]) {
-                    return Curry._2(ElSet.add, key, elSet);
+                    return Curry._2(ElSet.add, elementKey, elements);
                   } else {
-                    return elSet;
+                    return elements;
                   }
                 }), m, ElSet.empty);
   };
+  var State = {
+    LexState: LexState$1,
+    Data: Data$1,
+    empty: empty,
+    insert: insert,
+    remove: remove,
+    join: join$2,
+    ElSet: ElSet,
+    elements: elements
+  };
+  var partial_arg$2 = Crdt$DeltaCrdts.Make;
+  var include = partial_arg$2(Id, {
+        empty: empty,
+        join: join$2
+      });
+  var mutate = include.mutate;
+  var elements$1 = function (param) {
+    return Curry._1(elements, param.state);
+  };
   var insert$1 = function (replica, element, time) {
-    return Curry._2(mutate, replica, Curry._1(deltaOfState, insert(element, time)));
+    return Curry._2(mutate, replica, Curry._2(insert, element, time));
   };
   var remove$1 = function (replica, element, time) {
-    return Curry._2(mutate, replica, Curry._1(deltaOfState, remove(element, time)));
+    return Curry._2(mutate, replica, Curry._2(remove, element, time));
   };
   var Make_replica = include.replica;
   var Make_join = include.join;
+  var Make_patchOfState = include.patchOfState;
   var Make = {
     LexState: LexState,
     Data: Data,
     State: State,
     replica: Make_replica,
-    deltaOfState: deltaOfState,
     join: Make_join,
+    patchOfState: Make_patchOfState,
     mutate: mutate,
-    ElSet: ElSet,
-    elements: elements,
+    elements: elements$1,
     insert: insert$1,
     remove: remove$1
   };
@@ -292,10 +381,11 @@ function RemoveWins(Id, $$Element, Timestamp) {
 }
 
 export {
+  State ,
   Make ,
   InOrOut ,
-  IsInAddStays ,
-  IsInRemoveStays ,
+  InOrOutAddStays ,
+  InOrOutRemoveStays ,
   AddWins ,
   RemoveWins ,
   
