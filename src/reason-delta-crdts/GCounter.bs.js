@@ -8,14 +8,25 @@ import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
 function State(Data) {
+  var empty = Data.empty;
   var join = function (p, q) {
     return Curry._3(Data.merge, (function (param) {
                   return Caml_obj.caml_max;
                 }), p, q);
   };
+  var increment = function (state, id) {
+    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
+  };
+  var value = function (state) {
+    return Curry._3(Data.fold, (function (param, v, accum) {
+                  return v + accum | 0;
+                }), state, 0);
+  };
   return {
-          empty: Data.empty,
-          join: join
+          empty: empty,
+          join: join,
+          increment: increment,
+          value: value
         };
 }
 
@@ -27,9 +38,19 @@ function Make(Id) {
                   return Caml_obj.caml_max;
                 }), p, q);
   };
+  var increment = function (state, id) {
+    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
+  };
+  var value = function (state) {
+    return Curry._3(Data.fold, (function (param, v, accum) {
+                  return v + accum | 0;
+                }), state, 0);
+  };
   var State = {
     empty: empty,
-    join: join
+    join: join,
+    increment: increment,
+    value: value
   };
   var partial_arg = Crdt$DeltaCrdts.Make;
   var include = partial_arg(Id, State);
@@ -41,23 +62,19 @@ function Make(Id) {
             state: Curry._3(Data.add, id, 0, empty)
           };
   };
-  var value = function (patch) {
-    return Curry._3(Data.fold, (function (param, v, accum) {
-                  return v + accum | 0;
-                }), patch.state, 0);
+  var value$1 = function (patch) {
+    return value(patch.state);
   };
-  var increment = function (replica) {
+  var increment$1 = function (replica) {
     var id = replica.id;
-    if (id === undefined) {
+    if (id !== undefined) {
+      return Curry._2(mutate, replica, Curry._1(deltaOfState, increment(replica.state, Caml_option.valFromOption(id))));
+    } else {
       return /* Invalid */Block.__(1, [
                 /* replica */replica,
                 /* delta */undefined
               ]);
     }
-    var id$1 = Caml_option.valFromOption(id);
-    var newCount = Curry._2(Data.find, id$1, replica.state) + 1 | 0;
-    var delta = Curry._1(deltaOfState, Curry._3(Data.add, id$1, newCount, empty));
-    return Curry._2(mutate, replica, delta);
   };
   return {
           Data: Data,
@@ -67,8 +84,8 @@ function Make(Id) {
           mutate: mutate,
           initialValue: 0,
           replica: replica,
-          value: value,
-          increment: increment
+          value: value$1,
+          increment: increment$1
         };
 }
 

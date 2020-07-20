@@ -4,6 +4,30 @@ import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 
+function ComparableOfOrderedType(T) {
+  var compare = function (t, t$prime) {
+    var comparison = Curry._2(T.compare, t, t$prime);
+    if (comparison < 0) {
+      return /* Left */Block.__(0, [t]);
+    } else if (comparison > 0) {
+      return /* Right */Block.__(1, [t$prime]);
+    } else if (comparison === 0) {
+      return /* Either */Block.__(2, [
+                t,
+                t$prime
+              ]);
+    } else {
+      return /* Neither */Block.__(3, [
+                t,
+                t$prime
+              ]);
+    }
+  };
+  return {
+          compare: compare
+        };
+}
+
 function Make(Id, State) {
   var replica = function (id) {
     return {
@@ -84,29 +108,27 @@ function LexicographicPair(A, B) {
   ];
   var join = function (param, param$1) {
     var b$prime = param$1[1];
-    var a$prime = param$1[0];
     var b = param[1];
-    var a = param[0];
-    var priority = Curry._2(A.compare, a, a$prime);
-    switch (priority) {
+    var priority = Curry._2(A.compare, param[0], param$1[0]);
+    switch (priority.tag | 0) {
       case /* Left */0 :
           return /* tuple */[
-                  a,
+                  priority[0],
                   b
                 ];
-      case /* Both */1 :
+      case /* Either */1 :
           return /* tuple */[
-                  a,
+                  priority[0],
                   Curry._2(B.join, b, b$prime)
                 ];
       case /* Neither */2 :
           return /* tuple */[
-                  Curry._2(A.join, a, a$prime),
+                  Curry._2(A.join, priority[0], priority[1]),
                   B.empty
                 ];
       case /* Right */3 :
           return /* tuple */[
-                  a$prime,
+                  priority[0],
                   b$prime
                 ];
       
@@ -119,6 +141,7 @@ function LexicographicPair(A, B) {
 }
 
 export {
+  ComparableOfOrderedType ,
   Make ,
   Pair ,
   LexicographicPair ,

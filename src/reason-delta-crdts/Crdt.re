@@ -4,15 +4,41 @@ module type JoinableState = {
   let join: (t, t) => t;
 };
 
+module type Comparable = {
+  type result('x) =
+    | Left('x)
+    | Either('x, 'x)
+    | Neither('x, 'x)
+    | Right('x);
+
+  let compare: ('x, 'x) => result('x);
+};
+
+module ComparableOfOrderedType = (T: Map.OrderedType) => {
+  type result('t) =
+    | Left('t)
+    | Right('t)
+    | Either('t, 't)
+    | Neither('t, 't);
+
+  let compare: (T.t, T.t) => result(T.t) =
+    (t, t') => {
+      let comparison = T.compare(t, t');
+      if (comparison < 0) {
+        Left(t);
+      } else if (comparison > 0) {
+        Right(t');
+      } else if (comparison == 0) {
+        Either(t, t');
+      } else {
+        Neither(t, t');
+      };
+    };
+};
+
 module type ComparableState = {
   include JoinableState;
-  type result =
-    | Left
-    | Both
-    | Neither
-    | Right;
-
-  let compare: (t, t) => result;
+  include Comparable;
 };
 
 module type Patch = {
@@ -68,14 +94,15 @@ module Pair = (A: JoinableState, B: JoinableState) => {
 };
 
 module LexicographicPair = (A: ComparableState, B: JoinableState) => {
+  type t = (A.t, B.t);
   let empty = (A.empty, B.empty);
   let join = ((a, b), (a', b')) => {
     let priority = A.compare(a, a');
     switch (priority) {
-    | Left => (a, b)
-    | Right => (a', b')
-    | Both => (a, B.join(b, b'))
-    | Neither => (A.join(a, a'), B.empty)
+    | Left(a) => (a, b)
+    | Right(a') => (a', b')
+    | Either(a, _) => (a, B.join(b, b'))
+    | Neither(a, a') => (A.join(a, a'), B.empty)
     };
   };
 };
