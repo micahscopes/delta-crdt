@@ -15,9 +15,9 @@ module State =
   module LexState = Crdt.LexicographicPair(Timestamp, InOrOut);
   include Crdt.SimpleMap(Element, LexState);
   let insert = (element, time) =>
-    Data.add(element, (time, InOrOut.isIn), empty);
+    Data.singleton(element, (time, InOrOut.isIn));
   let remove = (element, time) =>
-    Data.add(element, (time, InOrOut.isOut), empty);
+    Data.singleton(element, (time, InOrOut.isOut));
 
   module ElSet = Set.Make(Element);
   let elements = m =>

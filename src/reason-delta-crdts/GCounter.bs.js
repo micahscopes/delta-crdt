@@ -8,7 +8,6 @@ import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
 function State(Data) {
-  var empty = Data.empty;
   var join = function (p, q) {
     return Curry._3(Data.merge, (function (param) {
                   return Caml_obj.caml_max;
@@ -20,10 +19,10 @@ function State(Data) {
                 }), state, 0);
   };
   var increment = function (state, id) {
-    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
+    return Curry._2(Data.singleton, id, Curry._2(Data.find, id, state) + 1 | 0);
   };
   return {
-          empty: empty,
+          empty: Data.empty,
           join: join,
           value: value,
           increment: increment
@@ -32,7 +31,6 @@ function State(Data) {
 
 function Make(Id) {
   var Data = $$Map.Make(Id);
-  var empty = Data.empty;
   var join = function (p, q) {
     return Curry._3(Data.merge, (function (param) {
                   return Caml_obj.caml_max;
@@ -44,10 +42,11 @@ function Make(Id) {
                 }), state, 0);
   };
   var increment = function (state, id) {
-    return Curry._3(Data.add, id, Curry._2(Data.find, id, state) + 1 | 0, empty);
+    return Curry._2(Data.singleton, id, Curry._2(Data.find, id, state) + 1 | 0);
   };
+  var State_empty = Data.empty;
   var State = {
-    empty: empty,
+    empty: State_empty,
     join: join,
     value: value,
     increment: increment
@@ -58,7 +57,7 @@ function Make(Id) {
   var replica = function (id) {
     return {
             id: Caml_option.some(id),
-            state: Curry._3(Data.add, id, 0, empty)
+            state: Curry._2(Data.singleton, id, 0)
           };
   };
   var value$1 = function (patch) {

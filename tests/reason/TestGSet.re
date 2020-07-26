@@ -6,7 +6,7 @@ test("test that we can make a GSet and add an element", t => {
   open GSetType.Data;
 
   let el = "hello";
-  let expected = empty |> add(el);
+  let expected = singleton(el);
   let replica = GSetType.replica("marge");
   let Result({replica}) = insert(replica, el);
 

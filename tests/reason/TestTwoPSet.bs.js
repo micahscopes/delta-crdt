@@ -18,7 +18,7 @@ Tape.test("test that we can add and remove an element only once", (function (t) 
             });
         var marge = Curry._1(T.replica, "marge");
         var el = "lol";
-        var elSet = Curry._2(T.State.Data.add, el, T.State.Data.empty);
+        var elSet = Curry._1(T.State.Data.singleton, el);
         var match = Curry._2(T.insert, marge, el);
         if (match.tag) {
           throw [

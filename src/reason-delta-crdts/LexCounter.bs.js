@@ -43,12 +43,11 @@ function State(Id) {
   };
   var partial_arg$2 = Crdt$DeltaCrdts.SimpleMap;
   var $$Map = partial_arg$2(Id, LexState);
-  var empty = $$Map.empty;
   var increment$1 = function (state, id) {
-    return Curry._3($$Map.Data.add, id, increment(Curry._2($$Map.Data.find, id, state)), empty);
+    return Curry._2($$Map.Data.singleton, id, increment(Curry._2($$Map.Data.find, id, state)));
   };
   var decrement$1 = function (state, id) {
-    return Curry._3($$Map.Data.add, id, decrement(Curry._2($$Map.Data.find, id, state)), empty);
+    return Curry._2($$Map.Data.singleton, id, decrement(Curry._2($$Map.Data.find, id, state)));
   };
   var value = function (state) {
     return Curry._3($$Map.Data.fold, (function (param, param$1, accum) {
@@ -59,7 +58,7 @@ function State(Id) {
           LexState: LexState,
           $$Map: $$Map,
           Data: $$Map.Data,
-          empty: empty,
+          empty: $$Map.empty,
           join: $$Map.join,
           increment: increment$1,
           decrement: decrement$1,
@@ -108,10 +107,10 @@ function Make(Id) {
   var empty = $$Map.empty;
   var join = $$Map.join;
   var increment$1 = function (state, id) {
-    return Curry._3($$Map.Data.add, id, increment(Curry._2($$Map.Data.find, id, state)), empty);
+    return Curry._2($$Map.Data.singleton, id, increment(Curry._2($$Map.Data.find, id, state)));
   };
   var decrement$1 = function (state, id) {
-    return Curry._3($$Map.Data.add, id, decrement(Curry._2($$Map.Data.find, id, state)), empty);
+    return Curry._2($$Map.Data.singleton, id, decrement(Curry._2($$Map.Data.find, id, state)));
   };
   var value = function (state) {
     return Curry._3($$Map.Data.fold, (function (param, param$1, accum) {

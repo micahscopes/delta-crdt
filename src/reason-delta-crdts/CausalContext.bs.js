@@ -20,9 +20,12 @@ function State(Id) {
   var Data = $$Set.Make(DotType);
   var include = GSet$DeltaCrdts.State(Data);
   var max = function (state, id) {
-    return Curry._1(Data.max_elt, Curry._2(Data.filter, (function (param) {
-                        return Caml_obj.caml_equal(id, param[0]);
-                      }), state))[1];
+    return Curry._1(Data.max_elt, Curry._2(Data.add, /* tuple */[
+                      id,
+                      0
+                    ], Curry._2(Data.filter, (function (param) {
+                            return Caml_obj.caml_equal(id, param[0]);
+                          }), state)))[1];
   };
   var next = function (state, id) {
     return /* tuple */[

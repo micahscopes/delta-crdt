@@ -9,9 +9,9 @@ module State = (Id: Crdt.BaseOrderedType) => {
   include Map;
 
   let increment = (state, id) =>
-    empty |> add(id, find(id, state) |> LexState.increment);
+    singleton(id, find(id, state) |> LexState.increment);
   let decrement = (state, id) =>
-    empty |> add(id, find(id, state) |> LexState.decrement);
+    singleton(id, find(id, state) |> LexState.decrement);
 
   let value = state => fold((_, (_, x), accum) => x + accum, state, 0);
 };

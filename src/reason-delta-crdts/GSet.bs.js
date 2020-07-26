@@ -6,15 +6,14 @@ import * as Caml_option from "bs-platform/lib/es6/caml_option.js";
 import * as Crdt$DeltaCrdts from "./Crdt.bs.js";
 
 function State(Data) {
-  var empty = Data.empty;
   var join = function (p, q) {
     return Curry._2(Data.union, p, q);
   };
   var insert = function (element) {
-    return Curry._2(Data.add, element, empty);
+    return Curry._1(Data.singleton, element);
   };
   return {
-          empty: empty,
+          empty: Data.empty,
           join: join,
           insert: insert
         };
@@ -22,15 +21,15 @@ function State(Data) {
 
 function Make(Id, $$Element) {
   var Data = $$Set.Make($$Element);
-  var empty = Data.empty;
   var join = function (p, q) {
     return Curry._2(Data.union, p, q);
   };
   var insert = function (element) {
-    return Curry._2(Data.add, element, empty);
+    return Curry._1(Data.singleton, element);
   };
+  var State_empty = Data.empty;
   var State = {
-    empty: empty,
+    empty: State_empty,
     join: join,
     insert: insert
   };
@@ -47,7 +46,7 @@ function Make(Id, $$Element) {
     return patch.state;
   };
   var insert$1 = function (replica, element) {
-    return Curry._2(mutate, replica, Curry._2(Data.add, element, empty));
+    return Curry._2(mutate, replica, Curry._1(Data.singleton, element));
   };
   return {
           Data: Data,

@@ -6,7 +6,7 @@ test("test that we can add and remove an element only once", t => {
   open T;
   let marge = replica("marge");
   let el = "lol";
-  let elSet = Data.empty |> Data.add(el);
+  let elSet = Data.singleton(el);
 
   let Result({replica: marge, _}) = insert(marge, el);
   Data.equal(elSet, elements(marge)) |> t.ok;

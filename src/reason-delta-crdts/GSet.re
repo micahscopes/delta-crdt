@@ -1,8 +1,9 @@
 module State = (Data: Set.S) => {
   type t = Data.t;
-  let empty = Data.empty;
-  let join = (p, q) => Data.union(p, q);
-  let insert = element => empty |> Data.add(element);
+  open Data;
+  let empty = empty;
+  let join = (p, q) => union(p, q);
+  let insert = element => singleton(element);
 };
 
 module Make = (Id: Set.OrderedType, Element: Set.OrderedType) => {

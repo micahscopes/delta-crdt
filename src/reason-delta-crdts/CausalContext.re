@@ -12,9 +12,11 @@ module State = (Id: Set.OrderedType) => {
 
   let max = (state, id) => {
     let (_, max) =
-      Data.filter(((id', _)) => id == id', state) |> Data.max_elt;
+      Data.filter(((id', _)) => id == id', state)
+      |> Data.add((id, 0))
+      |> Data.max_elt;
     max;
   };
 
-  let next = (state, id) => (id, max(state, id) + 1)
+  let next = (state, id) => (id, max(state, id) + 1);
 };

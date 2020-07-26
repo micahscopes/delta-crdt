@@ -17,7 +17,7 @@ Tape.test("test that we can make a GSet and add an element", (function (t) {
               compare: $$String.compare
             });
         var el = "hello";
-        var expected = Curry._2(GSetType.Data.add, el, GSetType.Data.empty);
+        var expected = Curry._1(GSetType.Data.singleton, el);
         var replica = Curry._1(GSetType.replica, "marge");
         var match = Curry._2(GSetType.insert, replica, el);
         if (match.tag) {
