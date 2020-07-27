@@ -11,8 +11,10 @@ function State($$Element, Timestamp, InOrOut) {
         empty: InOrOut.empty,
         join: InOrOut.join
       });
-  var Data = $$Map.Make($$Element);
-  var empty = Data.empty;
+  var partial_arg$1 = Crdt$DeltaCrdts.SimpleMap;
+  var include = partial_arg$1($$Element, LexState);
+  var Data = include.Data;
+  var empty = include.empty;
   var insert = function (element, time) {
     return Curry._3(Data.add, element, /* tuple */[
                 time,
@@ -25,22 +27,9 @@ function State($$Element, Timestamp, InOrOut) {
                 InOrOut.isOut
               ], empty);
   };
-  var join = function (m, m$prime) {
-    return Curry._3(Data.merge, (function (param, mState, mState$prime) {
-                  if (mState !== undefined) {
-                    if (mState$prime !== undefined) {
-                      return Curry._2(LexState.join, mState, mState$prime);
-                    } else {
-                      return Curry._2(LexState.join, mState, LexState.empty);
-                    }
-                  } else if (mState$prime !== undefined) {
-                    return Curry._2(LexState.join, mState$prime, LexState.empty);
-                  } else {
-                    return ;
-                  }
-                }), m, m$prime);
-  };
-  var ElSet = $$Set.Make($$Element);
+  var ElSet = $$Set.Make({
+        compare: $$Element.compare
+      });
   var elements = function (m) {
     return Curry._3(Data.fold, (function (elementKey, param, elements) {
                   if (param[1]) {
@@ -54,9 +43,9 @@ function State($$Element, Timestamp, InOrOut) {
           LexState: LexState,
           Data: Data,
           empty: empty,
+          join: include.join,
           insert: insert,
           remove: remove,
-          join: join,
           ElSet: ElSet,
           elements: elements
         };
@@ -68,14 +57,18 @@ function Make(Id, $$Element, Timestamp, InOrOut) {
         empty: InOrOut.empty,
         join: InOrOut.join
       });
-  var Data = $$Map.Make($$Element);
+  var Data = $$Map.Make({
+        compare: $$Element.compare
+      });
   var partial_arg$1 = Crdt$DeltaCrdts.LexicographicPair;
   var LexState$1 = partial_arg$1(Timestamp, {
         empty: InOrOut.empty,
         join: InOrOut.join
       });
-  var Data$1 = $$Map.Make($$Element);
-  var empty = Data$1.empty;
+  var partial_arg$2 = Crdt$DeltaCrdts.SimpleMap;
+  var include = partial_arg$2($$Element, LexState$1);
+  var Data$1 = include.Data;
+  var empty = include.empty;
   var insert = function (element, time) {
     return Curry._3(Data$1.add, element, /* tuple */[
                 time,
@@ -88,22 +81,9 @@ function Make(Id, $$Element, Timestamp, InOrOut) {
                 InOrOut.isOut
               ], empty);
   };
-  var join = function (m, m$prime) {
-    return Curry._3(Data$1.merge, (function (param, mState, mState$prime) {
-                  if (mState !== undefined) {
-                    if (mState$prime !== undefined) {
-                      return Curry._2(LexState$1.join, mState, mState$prime);
-                    } else {
-                      return Curry._2(LexState$1.join, mState, LexState$1.empty);
-                    }
-                  } else if (mState$prime !== undefined) {
-                    return Curry._2(LexState$1.join, mState$prime, LexState$1.empty);
-                  } else {
-                    return ;
-                  }
-                }), m, m$prime);
-  };
-  var ElSet = $$Set.Make($$Element);
+  var ElSet = $$Set.Make({
+        compare: $$Element.compare
+      });
   var elements = function (m) {
     return Curry._3(Data$1.fold, (function (elementKey, param, elements) {
                   if (param[1]) {
@@ -113,22 +93,23 @@ function Make(Id, $$Element, Timestamp, InOrOut) {
                   }
                 }), m, ElSet.empty);
   };
+  var State_join = include.join;
   var State = {
     LexState: LexState$1,
     Data: Data$1,
     empty: empty,
+    join: State_join,
     insert: insert,
     remove: remove,
-    join: join,
     ElSet: ElSet,
     elements: elements
   };
-  var partial_arg$2 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$2(Id, {
+  var partial_arg$3 = Crdt$DeltaCrdts.Make;
+  var include$1 = partial_arg$3(Id, {
         empty: empty,
-        join: join
+        join: State_join
       });
-  var mutate = include.mutate;
+  var mutate = include$1.mutate;
   var elements$1 = function (param) {
     return Curry._1(elements, param.state);
   };
@@ -142,9 +123,9 @@ function Make(Id, $$Element, Timestamp, InOrOut) {
           LexState: LexState,
           Data: Data,
           State: State,
-          replica: include.replica,
-          join: include.join,
-          patchOfState: include.patchOfState,
+          replica: include$1.replica,
+          join: include$1.join,
+          patchOfState: include$1.patchOfState,
           mutate: mutate,
           elements: elements$1,
           insert: insert$1,
@@ -194,14 +175,18 @@ function AddWins(Id, $$Element, Timestamp) {
         empty: false,
         join: join
       });
-  var Data = $$Map.Make($$Element);
+  var Data = $$Map.Make({
+        compare: $$Element.compare
+      });
   var partial_arg$1 = Crdt$DeltaCrdts.LexicographicPair;
   var LexState$1 = partial_arg$1(Timestamp, {
         empty: false,
         join: join
       });
-  var Data$1 = $$Map.Make($$Element);
-  var empty = Data$1.empty;
+  var partial_arg$2 = Crdt$DeltaCrdts.SimpleMap;
+  var include = partial_arg$2($$Element, LexState$1);
+  var Data$1 = include.Data;
+  var empty = include.empty;
   var insert = function (element, time) {
     return Curry._3(Data$1.add, element, /* tuple */[
                 time,
@@ -214,22 +199,9 @@ function AddWins(Id, $$Element, Timestamp) {
                 false
               ], empty);
   };
-  var join$2 = function (m, m$prime) {
-    return Curry._3(Data$1.merge, (function (param, mState, mState$prime) {
-                  if (mState !== undefined) {
-                    if (mState$prime !== undefined) {
-                      return Curry._2(LexState$1.join, mState, mState$prime);
-                    } else {
-                      return Curry._2(LexState$1.join, mState, LexState$1.empty);
-                    }
-                  } else if (mState$prime !== undefined) {
-                    return Curry._2(LexState$1.join, mState$prime, LexState$1.empty);
-                  } else {
-                    return ;
-                  }
-                }), m, m$prime);
-  };
-  var ElSet = $$Set.Make($$Element);
+  var ElSet = $$Set.Make({
+        compare: $$Element.compare
+      });
   var elements = function (m) {
     return Curry._3(Data$1.fold, (function (elementKey, param, elements) {
                   if (param[1]) {
@@ -239,22 +211,23 @@ function AddWins(Id, $$Element, Timestamp) {
                   }
                 }), m, ElSet.empty);
   };
+  var State_join = include.join;
   var State = {
     LexState: LexState$1,
     Data: Data$1,
     empty: empty,
+    join: State_join,
     insert: insert,
     remove: remove,
-    join: join$2,
     ElSet: ElSet,
     elements: elements
   };
-  var partial_arg$2 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$2(Id, {
+  var partial_arg$3 = Crdt$DeltaCrdts.Make;
+  var include$1 = partial_arg$3(Id, {
         empty: empty,
-        join: join$2
+        join: State_join
       });
-  var mutate = include.mutate;
+  var mutate = include$1.mutate;
   var elements$1 = function (param) {
     return Curry._1(elements, param.state);
   };
@@ -264,9 +237,9 @@ function AddWins(Id, $$Element, Timestamp) {
   var remove$1 = function (replica, element, time) {
     return Curry._2(mutate, replica, Curry._2(remove, element, time));
   };
-  var Make_replica = include.replica;
-  var Make_join = include.join;
-  var Make_patchOfState = include.patchOfState;
+  var Make_replica = include$1.replica;
+  var Make_join = include$1.join;
+  var Make_patchOfState = include$1.patchOfState;
   var Make = {
     LexState: LexState,
     Data: Data,
@@ -290,14 +263,18 @@ function RemoveWins(Id, $$Element, Timestamp) {
         empty: false,
         join: join$1
       });
-  var Data = $$Map.Make($$Element);
+  var Data = $$Map.Make({
+        compare: $$Element.compare
+      });
   var partial_arg$1 = Crdt$DeltaCrdts.LexicographicPair;
   var LexState$1 = partial_arg$1(Timestamp, {
         empty: false,
         join: join$1
       });
-  var Data$1 = $$Map.Make($$Element);
-  var empty = Data$1.empty;
+  var partial_arg$2 = Crdt$DeltaCrdts.SimpleMap;
+  var include = partial_arg$2($$Element, LexState$1);
+  var Data$1 = include.Data;
+  var empty = include.empty;
   var insert = function (element, time) {
     return Curry._3(Data$1.add, element, /* tuple */[
                 time,
@@ -310,22 +287,9 @@ function RemoveWins(Id, $$Element, Timestamp) {
                 false
               ], empty);
   };
-  var join$2 = function (m, m$prime) {
-    return Curry._3(Data$1.merge, (function (param, mState, mState$prime) {
-                  if (mState !== undefined) {
-                    if (mState$prime !== undefined) {
-                      return Curry._2(LexState$1.join, mState, mState$prime);
-                    } else {
-                      return Curry._2(LexState$1.join, mState, LexState$1.empty);
-                    }
-                  } else if (mState$prime !== undefined) {
-                    return Curry._2(LexState$1.join, mState$prime, LexState$1.empty);
-                  } else {
-                    return ;
-                  }
-                }), m, m$prime);
-  };
-  var ElSet = $$Set.Make($$Element);
+  var ElSet = $$Set.Make({
+        compare: $$Element.compare
+      });
   var elements = function (m) {
     return Curry._3(Data$1.fold, (function (elementKey, param, elements) {
                   if (param[1]) {
@@ -335,22 +299,23 @@ function RemoveWins(Id, $$Element, Timestamp) {
                   }
                 }), m, ElSet.empty);
   };
+  var State_join = include.join;
   var State = {
     LexState: LexState$1,
     Data: Data$1,
     empty: empty,
+    join: State_join,
     insert: insert,
     remove: remove,
-    join: join$2,
     ElSet: ElSet,
     elements: elements
   };
-  var partial_arg$2 = Crdt$DeltaCrdts.Make;
-  var include = partial_arg$2(Id, {
+  var partial_arg$3 = Crdt$DeltaCrdts.Make;
+  var include$1 = partial_arg$3(Id, {
         empty: empty,
-        join: join$2
+        join: State_join
       });
-  var mutate = include.mutate;
+  var mutate = include$1.mutate;
   var elements$1 = function (param) {
     return Curry._1(elements, param.state);
   };
@@ -360,9 +325,9 @@ function RemoveWins(Id, $$Element, Timestamp) {
   var remove$1 = function (replica, element, time) {
     return Curry._2(mutate, replica, Curry._2(remove, element, time));
   };
-  var Make_replica = include.replica;
-  var Make_join = include.join;
-  var Make_patchOfState = include.patchOfState;
+  var Make_replica = include$1.replica;
+  var Make_join = include$1.join;
+  var Make_patchOfState = include$1.patchOfState;
   var Make = {
     LexState: LexState,
     Data: Data,

@@ -8,30 +8,16 @@ module type InOrOut = {
 
 module State =
        (
-         Element: Map.OrderedType,
-         Timestamp: Crdt.ComparableState,
+         Element: Crdt.BaseOrderedType,
+         Timestamp: Crdt.ChoosableState,
          InOrOut: InOrOut,
        ) => {
   module LexState = Crdt.LexicographicPair(Timestamp, InOrOut);
-  module Data = Map.Make(Element);
-  type t = Data.t(LexState.t);
-  let empty = Data.empty;
+  include Crdt.SimpleMap(Element, LexState);
   let insert = (element, time) =>
     Data.add(element, (time, InOrOut.isIn), empty);
   let remove = (element, time) =>
     Data.add(element, (time, InOrOut.isOut), empty);
-  let join = (m, m') =>
-    Data.merge(
-      (_, mState, mState') =>
-        switch (mState, mState') {
-        | (Some(x), Some(y)) => Some(LexState.join(x, y))
-        | (Some(x), None)
-        | (None, Some(x)) => Some(LexState.join(x, LexState.empty))
-        | _ => None
-        },
-      m,
-      m',
-    );
 
   module ElSet = Set.Make(Element);
   let elements = m =>
@@ -49,8 +35,8 @@ module State =
 module Make =
        (
          Id: Map.OrderedType,
-         Element: Map.OrderedType,
-         Timestamp: Crdt.ComparableState,
+         Element: Crdt.BaseOrderedType,
+         Timestamp: Crdt.ChoosableState,
          InOrOut: InOrOut,
        ) => {
   module LexState = Crdt.LexicographicPair(Timestamp, InOrOut);
@@ -85,8 +71,8 @@ module InOrOutRemoveStays = {
 module AddWins =
        (
          Id: Map.OrderedType,
-         Element: Map.OrderedType,
-         Timestamp: Crdt.ComparableState,
+         Element: Crdt.BaseOrderedType,
+         Timestamp: Crdt.ChoosableState,
        ) => {
   module Make = Make(Id, Element, Timestamp, InOrOutAddStays);
 };
@@ -94,8 +80,8 @@ module AddWins =
 module RemoveWins =
        (
          Id: Map.OrderedType,
-         Element: Map.OrderedType,
-         Timestamp: Crdt.ComparableState,
+         Element: Crdt.BaseOrderedType,
+         Timestamp: Crdt.ChoosableState,
        ) => {
   module Make = Make(Id, Element, Timestamp, InOrOutRemoveStays);
 };

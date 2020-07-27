@@ -5,25 +5,16 @@
  */
 
 module type TimelikeState = {
-  include Crdt.ComparableState;
+  include Crdt.ChoosableState;
   let now: (~thePast: 'ctx, unit) => t;
 };
 
 module TimelikeCounterState = {
   module Int = {
     type t = int;
+    let empty = 0;
     let compare = Pervasives.compare;
   };
 
-  include Crdt.ComparableOfOrderedType(Int);
-  type t = Int.t;
-  let empty = 0;
-
-  let join = (t, t') =>
-    switch (compare(t, t')) {
-    | Either(x, _)
-    | Left(x)
-    | Right(x) => x
-    | _ => empty
-    };
+  include Crdt.ChoosableOfBaseOrderedType(Int);
 };
